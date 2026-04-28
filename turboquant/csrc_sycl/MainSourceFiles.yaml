@@ -1,0 +1,2103 @@
+---
+MainSourceFile:  'D:\User Files\Desktop\RotorQuant\MainSrcFiles_placehold'
+Replacements:
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          29
+    Length:          28
+    ReplacementText: "#include <sycl/sycl.hpp>\r\n#include <dpct/dpct.hpp>\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          220
+    Length:          11
+    ReplacementText: 'SYCL_EXTERNAL '
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          373
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          484
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          574
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          686
+    Length:          0
+    ReplacementText: 'SYCL_EXTERNAL '
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          697
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          761
+    Length:          8
+    ReplacementText: 'sycl::ext::oneapi::this_work_item::get_sub_group().get_local_range().get(0)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          799
+    Length:          0
+    ReplacementText: "    /*\r\n    DPCT1121:15: Make sure that the \"val\" which is used in the SYCL group function/algorithm is initialized.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          810
+    Length:          40
+    ReplacementText: 'dpct::shift_sub_group_left(sycl::ext::oneapi::this_work_item::get_sub_group(), val, offset)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          907
+    Length:          11
+    ReplacementText: "/*\r\nDPCT1110:16: The total declared local variable size in device function calc_gqa_score_kernel exceeds 128 bytes and may cause high register pressure. Consult with your hardware vendor to find the total register size available and adjust the code, or use smaller sub-group size to avoid high register pressure.\r\n*/\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          1352
+    Length:          0
+    ReplacementText: ",\r\n    float shared_query[4/*GQA_GROUP_SIZE*/][128/*EMB_DIM*/],\r\n    uint8_t *shared_outlier_ind,\r\n    float shared_innprod[4/*GQA_GROUP_SIZE*/][32/*WARP_SIZE*/],\r\n    float shared_outlier_innprod[4/*GQA_GROUP_SIZE*/][32/*WARP_SIZE*/],\r\n    float shared_q_sketch[4/*GQA_GROUP_SIZE*/][32/*WARP_SIZE*/][8],\r\n    float shared_q_outliers_sketch[4/*GQA_GROUP_SIZE*/][32/*WARP_SIZE*/][8]"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          1361
+    Length:          0
+    ReplacementText: "auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\r\n    "
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          1375
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          1402
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(1)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          1479
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          1510
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(1)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          1541
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(0)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          2736
+    Length:          55
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          3197
+    Length:          49
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          3519
+    Length:          59
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          3583
+    Length:          67
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          3798
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:42: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          3902
+    Length:          63
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          3970
+    Length:          72
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          5565
+    Length:          0
+    ReplacementText: "        /*\r\n        DPCT1118:17: SYCL group functions and algorithms must be encountered in converged control flow. You may need to adjust the code.\r\n        */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          5573
+    Length:          15
+    ReplacementText: "/*\r\n        DPCT1065:44: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n        */\r\n        item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          6054
+    Length:          0
+    ReplacementText: "            /*\r\n            DPCT1118:19: SYCL group functions and algorithms must be encountered in converged control flow. You may need to adjust the code.\r\n            */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          6066
+    Length:          15
+    ReplacementText: "/*\r\n            DPCT1065:46: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n            */\r\n            item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          6891
+    Length:          0
+    ReplacementText: "                /*\r\n                DPCT1118:20: SYCL group functions and algorithms must be encountered in converged control flow. You may need to adjust the code.\r\n                */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          6907
+    Length:          15
+    ReplacementText: "/*\r\n                DPCT1065:47: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n                */\r\n                item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          7295
+    Length:          0
+    ReplacementText: "        /*\r\n        DPCT1118:18: SYCL group functions and algorithms must be encountered in converged control flow. You may need to adjust the code.\r\n        */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          7303
+    Length:          15
+    ReplacementText: "/*\r\n        DPCT1065:45: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n        */\r\n        item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          7330
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:43: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          7729
+    Length:          17
+    ReplacementText: 'norm_otlr * norm_otlr'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          9222
+    Length:          4
+    ReplacementText: 'dpct::dim3'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          9277
+    Length:          4
+    ReplacementText: 'dpct::dim3'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          9338
+    Length:          473
+    ReplacementText: "dpct::get_in_order_queue().submit(\r\n      [&](sycl::handler &cgh) {\r\n        /*\r\n        DPCT1101:69: 'GQA_GROUP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        /*\r\n        DPCT1101:70: 'EMB_DIM' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float[4/*GQA_GROUP_SIZE*/][128/*EMB_DIM*/], 0> shared_query_acc_ct1(cgh);\r\n        /*\r\n        DPCT1101:71: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<uint8_t, 1> shared_outlier_ind_acc_ct1(sycl::range<1>(32/*WARP_SIZE*/), cgh);\r\n        /*\r\n        DPCT1101:72: 'GQA_GROUP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        /*\r\n        DPCT1101:73: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float[4/*GQA_GROUP_SIZE*/][32/*WARP_SIZE*/], 0> shared_innprod_acc_ct1(cgh);\r\n        /*\r\n        DPCT1101:74: 'GQA_GROUP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        /*\r\n        DPCT1101:75: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float[4/*GQA_GROUP_SIZE*/][32/*WARP_SIZE*/], 0> shared_outlier_innprod_acc_ct1(cgh);\r\n        /*\r\n        DPCT1101:76: 'GQA_GROUP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        /*\r\n        DPCT1101:77: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float[4/*GQA_GROUP_SIZE*/][32/*WARP_SIZE*/][8], 0> shared_q_sketch_acc_ct1(cgh);\r\n        /*\r\n        DPCT1101:78: 'GQA_GROUP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        /*\r\n        DPCT1101:79: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float[4/*GQA_GROUP_SIZE*/][32/*WARP_SIZE*/][8], 0> shared_q_outliers_sketch_acc_ct1(cgh);\r\n\r\n        auto key_quant_data_ptr_uint8_t_ct1 = key_quant.data_ptr<uint8_t>();\r\n        auto key_outlier_quant_data_ptr_uint8_t_ct2 = key_outlier_quant.data_ptr<uint8_t>();\r\n        auto outlier_indices_data_ptr_uint8_t_ct5 = outlier_indices.data_ptr<uint8_t>();\r\n        auto query_sketch_data_ptr_float_ct6 = query_sketch.data_ptr<float>();\r\n        auto scores_data_ptr_float_ct8 = scores.data_ptr<float>();\r\n\r\n        cgh.parallel_for(\r\n          sycl::nd_range<3>(numBlocks * threadsPerBlockDim, threadsPerBlockDim), \r\n          [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {\r\n            calc_gqa_score_kernel(query_states_ptr, key_quant_data_ptr_uint8_t_ct1, key_outlier_quant_data_ptr_uint8_t_ct2, key_norm_ptr, key_outlier_norm_ptr, outlier_indices_data_ptr_uint8_t_ct5, query_sketch_data_ptr_float_ct6, rand_prj_ptr, scores_data_ptr_float_ct8, batch, k_head, n, group_size, gqa_group_size, sketch_dim, outlier_sketch_dim, emb_dim, outlier_counts, shared_query_acc_ct1, shared_outlier_ind_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), shared_innprod_acc_ct1, shared_outlier_innprod_acc_ct1, shared_q_sketch_acc_ct1, shared_q_outliers_sketch_acc_ct1);\r\n          });\r\n      });"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: true
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Offset:          9811
+    Length:          1
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          29
+    Length:          28
+    ReplacementText: "#include <sycl/sycl.hpp>\r\n#include <dpct/dpct.hpp>\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          166
+    Length:          11
+    ReplacementText: 'SYCL_EXTERNAL '
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          319
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          430
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          519
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          652
+    Length:          11
+    ReplacementText: 'SYCL_EXTERNAL '
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          820
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          933
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          1024
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          1183
+    Length:          11
+    ReplacementText: "/*\r\nDPCT1110:6: The total declared local variable size in device function quantize_with_outliers_kernel exceeds 128 bytes and may cause high register pressure. Consult with your hardware vendor to find the total register size available and adjust the code, or use smaller sub-group size to avoid high register pressure.\r\n*/\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          1528
+    Length:          0
+    ReplacementText: ", uint8_t *shared_mask,\r\n    float shared_keys[128/*EMB_DIM*/][32/*WARP_SIZE*/],\r\n    float *shared_outlier_norms,\r\n    uint8_t shared_key_quant[32/*WARP_SIZE*/][32/*WARPS_PER_BLOCK*/],\r\n    uint8_t shared_key_outlier_quant[32/*WARP_SIZE*/][32/*WARPS_PER_BLOCK*/]"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          1537
+    Length:          0
+    ReplacementText: "auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\r\n    "
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          1550
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          1586
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          1617
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(1)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          1648
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(1)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          1690
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(0)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          2518
+    Length:          40
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          2765
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:26: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          2904
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:27: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          2926
+    Length:          49
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          3303
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:28: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          3751
+    Length:          49
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          3809
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(0)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          3914
+    Length:          0
+    ReplacementText: "        /*\r\n        DPCT1118:7: SYCL group functions and algorithms must be encountered in converged control flow. You may need to adjust the code.\r\n        */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          3922
+    Length:          15
+    ReplacementText: "/*\r\n        DPCT1065:31: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n        */\r\n        item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          4104
+    Length:          87
+    ReplacementText: 'dpct::atomic_fetch_add<sycl::access::address_space::generic_space>(&shared_outlier_norms[threadLane], shared_keys[chnl_idx][threadLane] * shared_keys[chnl_idx][threadLane])'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          4227
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:29: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          4249
+    Length:          64
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          4318
+    Length:          72
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          4565
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:30: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          5241
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(0)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          5321
+    Length:          39
+    ReplacementText: 'sycl::sqrt(shared_outlier_norms[threadLane])'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          7174
+    Length:          4
+    ReplacementText: 'dpct::dim3'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          7243
+    Length:          4
+    ReplacementText: 'dpct::dim3'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          7520
+    Length:          12
+    ReplacementText: 'dpct::queue_ptr'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          7545
+    Length:          25
+    ReplacementText: 'stream = dpct::get_current_device().create_queue()'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          7685
+    Length:          25
+    ReplacementText: 'device_id = dpct::get_current_device_id()'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          7795
+    Length:          14
+    ReplacementText: 'dpct::device_info'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          7926
+    Length:          42
+    ReplacementText: 'dpct::get_device(device_id).get_device_info(prop)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          8060
+    Length:          50
+    ReplacementText: 'std::min(1024 * 1024, prop.persistingL2CacheMaxSize)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          8112
+    Length:          61
+    ReplacementText: "    /*\r\n    DPCT1026:32: The call to cudaDeviceSetLimit was removed because SYCL currently does not support setting resource limits on devices.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          8368
+    Length:          67
+    ReplacementText: 'std::min(static_cast<size_t>(prop.accessPolicyMaxWindowSize), num_bytes)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          8509
+    Length:          19
+    ReplacementText: int
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          8643
+    Length:          89
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          8769
+    Length:          53
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          8907
+    Length:          53
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          9031
+    Length:          53
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          9151
+    Length:          53
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          9289
+    Length:          92
+    ReplacementText: "    /*\r\n    DPCT1026:33: The call to cudaStreamSetAttribute was removed because SYCL currently does not support setting cache config on devices.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          9425
+    Length:          0
+    ReplacementText: "    /*\r\n    DPCT1049:8: The work-group size passed to the SYCL kernel may exceed the limit. To get the device limit, query info::device::max_work_group_size. Adjust the work-group size if needed.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          9429
+    Length:          345
+    ReplacementText: "stream->submit(\r\n      [&](sycl::handler &cgh) {\r\n        /*\r\n        DPCT1101:61: 'EMB_DIM' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<uint8_t, 1> shared_mask_acc_ct1(sycl::range<1>(128/*EMB_DIM*/), cgh);\r\n        /*\r\n        DPCT1101:62: 'EMB_DIM' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        /*\r\n        DPCT1101:63: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float[128/*EMB_DIM*/][32/*WARP_SIZE*/], 0> shared_keys_acc_ct1(cgh);\r\n        /*\r\n        DPCT1101:64: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> shared_outlier_norms_acc_ct1(sycl::range<1>(32/*WARP_SIZE*/), cgh);\r\n        /*\r\n        DPCT1101:65: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        /*\r\n        DPCT1101:66: 'WARPS_PER_BLOCK' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<uint8_t[32/*WARP_SIZE*/][32/*WARPS_PER_BLOCK*/], 0> shared_key_quant_acc_ct1(cgh);\r\n        /*\r\n        DPCT1101:67: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        /*\r\n        DPCT1101:68: 'WARPS_PER_BLOCK' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<uint8_t[32/*WARP_SIZE*/][32/*WARPS_PER_BLOCK*/], 0> shared_key_outlier_quant_acc_ct1(cgh);\r\n\r\n        auto key_quant_data_ptr_uint8_t_ct1 = key_quant.data_ptr<uint8_t>();\r\n        auto key_outlier_quant_data_ptr_uint8_t_ct2 = key_outlier_quant.data_ptr<uint8_t>();\r\n        auto outlier_indices_data_ptr_uint8_t_ct3 = outlier_indices.data_ptr<uint8_t>();\r\n\r\n        cgh.parallel_for(\r\n          sycl::nd_range<3>(numBlocks * threadsPerBlockDim, threadsPerBlockDim), \r\n          [=](sycl::nd_item<3> item_ct1) {\r\n            quantize_with_outliers_kernel(key_states_ptr, key_quant_data_ptr_uint8_t_ct1, key_outlier_quant_data_ptr_uint8_t_ct2, outlier_indices_data_ptr_uint8_t_ct3, rand_prj_ptr, outlier_norms_ptr, batch, head, n, group_size, sketch_dim, outlier_sketch_dim, emb_dim, outlier_counts, shared_mask_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), shared_keys_acc_ct1, shared_outlier_norms_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), shared_key_quant_acc_ct1, shared_key_outlier_quant_acc_ct1);\r\n          });\r\n      });"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: true
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          9774
+    Length:          1
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          9777
+    Length:          53
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          9916
+    Length:          92
+    ReplacementText: "    /*\r\n    DPCT1026:34: The call to cudaStreamSetAttribute was removed because SYCL currently does not support setting cache config on devices.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Offset:          10070
+    Length:          35
+    ReplacementText: "    /*\r\n    DPCT1026:35: The call to cudaCtxResetPersistingL2Cache was removed because SYCL currently does not support setting cache config on devices.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          29
+    Length:          28
+    ReplacementText: "#include <sycl/sycl.hpp>\r\n#include <dpct/dpct.hpp>\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          195
+    Length:          11
+    ReplacementText: 'SYCL_EXTERNAL '
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          348
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          459
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          549
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          661
+    Length:          0
+    ReplacementText: 'SYCL_EXTERNAL '
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          672
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          736
+    Length:          8
+    ReplacementText: 'sycl::ext::oneapi::this_work_item::get_sub_group().get_local_range().get(0)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          774
+    Length:          0
+    ReplacementText: "    /*\r\n    DPCT1121:9: Make sure that the \"val\" which is used in the SYCL group function/algorithm is initialized.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          785
+    Length:          40
+    ReplacementText: 'dpct::shift_sub_group_left(sycl::ext::oneapi::this_work_item::get_sub_group(), val, offset)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          881
+    Length:          11
+    ReplacementText: "/*\r\nDPCT1110:10: The total declared local variable size in device function calc_score_kernel exceeds 128 bytes and may cause high register pressure. Consult with your hardware vendor to find the total register size available and adjust the code, or use smaller sub-group size to avoid high register pressure.\r\n*/\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          1298
+    Length:          0
+    ReplacementText: ", float *shared_query, uint8_t *shared_outlier_ind,\r\n    float *shared_innprod, float *shared_outlier_innprod,\r\n    float shared_q_sketch[32/*WARP_SIZE*/][8],\r\n    float shared_q_outliers_sketch[32/*WARP_SIZE*/][8]"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          1307
+    Length:          0
+    ReplacementText: "auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\r\n    "
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          1319
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          1346
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(1)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          1382
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          1413
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(1)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          1444
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(0)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          2627
+    Length:          39
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          2941
+    Length:          49
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          3263
+    Length:          43
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          3311
+    Length:          51
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          3486
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:36: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          3590
+    Length:          47
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          3642
+    Length:          56
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          5034
+    Length:          0
+    ReplacementText: "            /*\r\n            DPCT1118:12: SYCL group functions and algorithms must be encountered in converged control flow. You may need to adjust the code.\r\n            */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          5046
+    Length:          15
+    ReplacementText: "/*\r\n            DPCT1065:39: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n            */\r\n            item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          5729
+    Length:          0
+    ReplacementText: "            /*\r\n            DPCT1118:13: SYCL group functions and algorithms must be encountered in converged control flow. You may need to adjust the code.\r\n            */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          5741
+    Length:          15
+    ReplacementText: "/*\r\n            DPCT1065:40: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n            */\r\n            item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          5883
+    Length:          0
+    ReplacementText: "            /*\r\n            DPCT1118:14: SYCL group functions and algorithms must be encountered in converged control flow. You may need to adjust the code.\r\n            */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          5895
+    Length:          15
+    ReplacementText: "/*\r\n            DPCT1065:41: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n            */\r\n            item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          6101
+    Length:          0
+    ReplacementText: "        /*\r\n        DPCT1118:11: SYCL group functions and algorithms must be encountered in converged control flow. You may need to adjust the code.\r\n        */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          6109
+    Length:          15
+    ReplacementText: "/*\r\n        DPCT1065:38: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n        */\r\n        item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          6136
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:37: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          6523
+    Length:          17
+    ReplacementText: 'norm_otlr * norm_otlr'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          7905
+    Length:          4
+    ReplacementText: 'dpct::dim3'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          7958
+    Length:          4
+    ReplacementText: 'dpct::dim3'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          8019
+    Length:          451
+    ReplacementText: "dpct::get_in_order_queue().submit(\r\n      [&](sycl::handler &cgh) {\r\n        /*\r\n        DPCT1101:55: 'EMB_DIM' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> shared_query_acc_ct1(sycl::range<1>(128/*EMB_DIM*/), cgh);\r\n        /*\r\n        DPCT1101:56: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<uint8_t, 1> shared_outlier_ind_acc_ct1(sycl::range<1>(32/*WARP_SIZE*/), cgh);\r\n        /*\r\n        DPCT1101:57: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> shared_innprod_acc_ct1(sycl::range<1>(32/*WARP_SIZE*/), cgh);\r\n        /*\r\n        DPCT1101:58: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> shared_outlier_innprod_acc_ct1(sycl::range<1>(32/*WARP_SIZE*/), cgh);\r\n        /*\r\n        DPCT1101:59: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float[32/*WARP_SIZE*/][8], 0> shared_q_sketch_acc_ct1(cgh);\r\n        /*\r\n        DPCT1101:60: 'WARP_SIZE' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float[32/*WARP_SIZE*/][8], 0> shared_q_outliers_sketch_acc_ct1(cgh);\r\n\r\n        auto key_quant_data_ptr_uint8_t_ct1 = key_quant.data_ptr<uint8_t>();\r\n        auto key_outlier_quant_data_ptr_uint8_t_ct2 = key_outlier_quant.data_ptr<uint8_t>();\r\n        auto outlier_indices_data_ptr_uint8_t_ct5 = outlier_indices.data_ptr<uint8_t>();\r\n        auto query_sketch_data_ptr_float_ct6 = query_sketch.data_ptr<float>();\r\n        auto scores_data_ptr_float_ct8 = scores.data_ptr<float>();\r\n\r\n        cgh.parallel_for(\r\n          sycl::nd_range<3>(numBlocks * threadsPerBlockDim, threadsPerBlockDim), \r\n          [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {\r\n            calc_score_kernel(query_states_ptr, key_quant_data_ptr_uint8_t_ct1, key_outlier_quant_data_ptr_uint8_t_ct2, key_norm_ptr, key_outlier_norm_ptr, outlier_indices_data_ptr_uint8_t_ct5, query_sketch_data_ptr_float_ct6, rand_prj_ptr, scores_data_ptr_float_ct8, batch, head, n, group_size, sketch_dim, outlier_sketch_dim, emb_dim, outlier_counts, shared_query_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), shared_outlier_ind_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), shared_innprod_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), shared_outlier_innprod_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), shared_q_sketch_acc_ct1, shared_q_outliers_sketch_acc_ct1);\r\n          });\r\n      });"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: true
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Offset:          8470
+    Length:          1
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          0
+    Length:          23
+    ReplacementText: "#include <sycl/sycl.hpp>\r\n#include <dpct/dpct.hpp>\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          71
+    Length:          28
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          260
+    Length:          11
+    ReplacementText: 'SYCL_EXTERNAL '
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          413
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          524
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          613
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          746
+    Length:          11
+    ReplacementText: 'SYCL_EXTERNAL '
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          914
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1027
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1118
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1238
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1249
+    Length:          15
+    ReplacementText: __dpct_inline__
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1348
+    Length:          0
+    ReplacementText: "    /*\r\n    DPCT1121:21: Make sure that the \"sum\" which is used in the SYCL group function/algorithm is initialized.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1359
+    Length:          39
+    ReplacementText: 'dpct::shift_sub_group_left(sycl::ext::oneapi::this_work_item::get_sub_group(), sum, 1<<i)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1421
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1432
+    Length:          15
+    ReplacementText: __dpct_inline__
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1551
+    Length:          11
+    ReplacementText: "/*\r\nDPCT1110:22: The total declared local variable size in device function batchedQuantizedMultiplyAccumulate exceeds 128 bytes and may cause high register pressure. Consult with your hardware vendor to find the total register size available and adjust the code, or use smaller sub-group size to avoid high register pressure.\r\n*/\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1779
+    Length:          0
+    ReplacementText: "auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\r\n    "
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1839
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1881
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(1)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1894
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(1)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          1907
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(1)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          2740
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          2815
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          2874
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          4186
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          5274
+    Length:          4
+    ReplacementText: 'dpct::dim3'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          5356
+    Length:          4
+    ReplacementText: 'dpct::dim3'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          5385
+    Length:          201
+    ReplacementText: "dpct::get_in_order_queue().parallel_for(\r\n      sycl::nd_range<3>(num_blocks * num_threads, num_threads), \r\n      [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {\r\n        batchedQuantizedMultiplyAccumulate(in_feats, kernel, zeros, scaling_factors, out_feats, num_in_channels, num_out_channels, group_size, nh, mqa, bit);\r\n      });"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: true
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Offset:          5586
+    Length:          1
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          29
+    Length:          28
+    ReplacementText: "#include <sycl/sycl.hpp>\r\n#include <dpct/dpct.hpp>\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          165
+    Length:          11
+    ReplacementText: 'SYCL_EXTERNAL '
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          237
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          343
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          427
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          556
+    Length:          11
+    ReplacementText: 'SYCL_EXTERNAL '
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          643
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          751
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          837
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          1099
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          1926
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          2460
+    Length:          11
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          2604
+    Length:          17
+    ReplacementText: 'sycl::fabs(val - best)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          2699
+    Length:          25
+    ReplacementText: 'sycl::fabs(val - centroids[i])'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          3062
+    Length:          11
+    ReplacementText: "/*\r\nDPCT1110:0: The total declared local variable size in device function rotor_full_fused_kernel exceeds 128 bytes and may cause high register pressure. Consult with your hardware vendor to find the total register size available and adjust the code, or use smaller sub-group size to avoid high register pressure.\r\n*/\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          3566
+    Length:          0
+    ReplacementText: ", float *sh_rotors,\r\n    float *sh_c_scalar, float *sh_c_vector, float *sh_c_bivector,\r\n    float *sh_c_trivector"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          3620
+    Length:          43
+    ReplacementText: "auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          3668
+    Length:          41
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          3714
+    Length:          41
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          3760
+    Length:          43
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          3808
+    Length:          44
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          3868
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          3960
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          4070
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          4161
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          4254
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          4352
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          4413
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:23: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          4443
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          4659
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          6796
+    Length:          11
+    ReplacementText: "/*\r\nDPCT1110:1: The total declared local variable size in device function rotor_sandwich_kernel exceeds 128 bytes and may cause high register pressure. Consult with your hardware vendor to find the total register size available and adjust the code, or use smaller sub-group size to avoid high register pressure.\r\n*/\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          7055
+    Length:          0
+    ReplacementText: ', float *sh_rotors'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          7063
+    Length:          43
+    ReplacementText: "auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          7122
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          7180
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          7230
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:24: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          7260
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          7435
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          8337
+    Length:          11
+    ReplacementText: "/*\r\nDPCT1110:2: The total declared local variable size in device function rotor_inverse_sandwich_kernel exceeds 128 bytes and may cause high register pressure. Consult with your hardware vendor to find the total register size available and adjust the code, or use smaller sub-group size to avoid high register pressure.\r\n*/\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          8604
+    Length:          0
+    ReplacementText: ', float *sh_rotors'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          8612
+    Length:          43
+    ReplacementText: "auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          8671
+    Length:          11
+    ReplacementText: 'item_ct1.get_local_id(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          8729
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          8779
+    Length:          15
+    ReplacementText: "/*\r\n    DPCT1065:25: Consider replacing sycl::nd_item::barrier() with sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better performance if there is no access to global memory.\r\n    */\r\n    item_ct1.barrier()"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          8809
+    Length:          10
+    ReplacementText: 'item_ct1.get_group(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          8987
+    Length:          10
+    ReplacementText: 'item_ct1.get_local_range(2)'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          10328
+    Length:          34
+    ReplacementText: 'std::min(256, std::max(n_groups, WARP_SIZE))'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          10368
+    Length:          4
+    ReplacementText: 'dpct::dim3'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          10394
+    Length:          0
+    ReplacementText: "    /*\r\n    DPCT1049:3: The work-group size passed to the SYCL kernel may exceed the limit. To get the device limit, query info::device::max_work_group_size. Adjust the work-group size if needed.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          10398
+    Length:          374
+    ReplacementText: "dpct::get_in_order_queue().submit(\r\n      [&](sycl::handler &cgh) {\r\n        /*\r\n        DPCT1101:48: 'MAX_GROUPS * 4' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> sh_rotors_acc_ct1(sycl::range<1>(512/*MAX_GROUPS * 4*/), cgh);\r\n        /*\r\n        DPCT1101:49: 'MAX_LEVELS' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> sh_c_scalar_acc_ct1(sycl::range<1>(256/*MAX_LEVELS*/), cgh);\r\n        /*\r\n        DPCT1101:50: 'MAX_LEVELS' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> sh_c_vector_acc_ct1(sycl::range<1>(256/*MAX_LEVELS*/), cgh);\r\n        /*\r\n        DPCT1101:51: 'MAX_LEVELS' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> sh_c_bivector_acc_ct1(sycl::range<1>(256/*MAX_LEVELS*/), cgh);\r\n        /*\r\n        DPCT1101:52: 'MAX_LEVELS' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> sh_c_trivector_acc_ct1(sycl::range<1>(256/*MAX_LEVELS*/), cgh);\r\n\r\n        auto input_data_ptr_T_ct0 = input.data_ptr<T>();\r\n        auto rotors_data_ptr_float_ct1 = rotors.data_ptr<float>();\r\n        auto c_scalar_data_ptr_float_ct2 = c_scalar.data_ptr<float>();\r\n        auto c_vector_data_ptr_float_ct4 = c_vector.data_ptr<float>();\r\n        auto c_bivector_data_ptr_float_ct6 = c_bivector.data_ptr<float>();\r\n        auto c_trivector_data_ptr_float_ct8 = c_trivector.data_ptr<float>();\r\n        auto output_data_ptr_T_ct10 = output.data_ptr<T>();\r\n\r\n        cgh.parallel_for(\r\n          sycl::nd_range<3>(blocks * sycl::range<3>(1, 1, threads), sycl::range<3>(1, 1, threads)), \r\n          [=](sycl::nd_item<3> item_ct1) {\r\n            rotor_full_fused_kernel<T>(input_data_ptr_T_ct0, rotors_data_ptr_float_ct1, c_scalar_data_ptr_float_ct2, n_scalar, c_vector_data_ptr_float_ct4, n_vector, c_bivector_data_ptr_float_ct6, n_bivector, c_trivector_data_ptr_float_ct8, n_trivector, output_data_ptr_T_ct10, batch_size, emb_dim, n_groups, sh_rotors_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), sh_c_scalar_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), sh_c_vector_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), sh_c_bivector_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get(), sh_c_trivector_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get());\r\n          });\r\n      });"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: true
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          10772
+    Length:          1
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          11106
+    Length:          34
+    ReplacementText: 'std::min(256, std::max(n_groups, WARP_SIZE))'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          11142
+    Length:          0
+    ReplacementText: "    /*\r\n    DPCT1049:4: The work-group size passed to the SYCL kernel may exceed the limit. To get the device limit, query info::device::max_work_group_size. Adjust the work-group size if needed.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          11146
+    Length:          182
+    ReplacementText: "dpct::get_in_order_queue().submit(\r\n      [&](sycl::handler &cgh) {\r\n        /*\r\n        DPCT1101:53: 'MAX_GROUPS * 4' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> sh_rotors_acc_ct1(sycl::range<1>(512/*MAX_GROUPS * 4*/), cgh);\r\n\r\n        auto input_data_ptr_T_ct0 = input.data_ptr<T>();\r\n        auto rotors_data_ptr_float_ct1 = rotors.data_ptr<float>();\r\n        auto output_data_ptr_T_ct2 = output.data_ptr<T>();\r\n\r\n        cgh.parallel_for(\r\n          sycl::nd_range<3>(sycl::range<3>(1, 1, batch_size) * sycl::range<3>(1, 1, threads), sycl::range<3>(1, 1, threads)), \r\n          [=](sycl::nd_item<3> item_ct1) {\r\n            rotor_sandwich_kernel<T>(input_data_ptr_T_ct0, rotors_data_ptr_float_ct1, output_data_ptr_T_ct2, batch_size, emb_dim, n_groups, sh_rotors_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get());\r\n          });\r\n      });"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: true
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          11328
+    Length:          1
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          11645
+    Length:          34
+    ReplacementText: 'std::min(256, std::max(n_groups, WARP_SIZE))'
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          11681
+    Length:          0
+    ReplacementText: "    /*\r\n    DPCT1049:5: The work-group size passed to the SYCL kernel may exceed the limit. To get the device limit, query info::device::max_work_group_size. Adjust the work-group size if needed.\r\n    */\r\n"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          11685
+    Length:          193
+    ReplacementText: "dpct::get_in_order_queue().submit(\r\n      [&](sycl::handler &cgh) {\r\n        /*\r\n        DPCT1101:54: 'MAX_GROUPS * 4' expression was replaced with a value. Modify the code to use the original expression, provided in comments, if it is correct.\r\n        */\r\n        sycl::local_accessor<float, 1> sh_rotors_acc_ct1(sycl::range<1>(512/*MAX_GROUPS * 4*/), cgh);\r\n\r\n        auto input_mv_data_ptr_T_ct0 = input_mv.data_ptr<T>();\r\n        auto rotors_data_ptr_float_ct1 = rotors.data_ptr<float>();\r\n        auto output_data_ptr_T_ct2 = output.data_ptr<T>();\r\n\r\n        cgh.parallel_for(\r\n          sycl::nd_range<3>(sycl::range<3>(1, 1, batch_size) * sycl::range<3>(1, 1, threads), sycl::range<3>(1, 1, threads)), \r\n          [=](sycl::nd_item<3> item_ct1) {\r\n            rotor_inverse_sandwich_kernel<T>(input_mv_data_ptr_T_ct0, rotors_data_ptr_float_ct1, output_data_ptr_T_ct2, batch_size, emb_dim, n_groups, sh_rotors_acc_ct1.get_multi_ptr<sycl::access::decorated::no>().get());\r\n          });\r\n      });"
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: true
+  - FilePath:        'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Offset:          11878
+    Length:          1
+    ReplacementText: ''
+    ConstantFlag:    ''
+    ConstantOffset:  0
+    InitStr:         ''
+    NewHostVarName:  ''
+    BlockLevelFormatFlag: false
+MainSourceFilesDigest:
+  - MainSourceFile:  'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_gqa_score_kernel.cu'
+    Digest:          e559a34973f5570d5845422668fe078c
+    HasCUDASyntax:   true
+  - MainSourceFile:  'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_quant_kernel.cu'
+    Digest:          b44647084ea1d3202cbee8749643fcef
+    HasCUDASyntax:   true
+  - MainSourceFile:  'D:\User Files\Desktop\RotorQuant\turboquant\csrc\qjl_score_kernel.cu'
+    Digest:          6f6f3aecf051d5b0b12dc423c462acc7
+    HasCUDASyntax:   true
+  - MainSourceFile:  'D:\User Files\Desktop\RotorQuant\turboquant\csrc\quantization.cu'
+    Digest:          b64eb52ba46767236e1922563ecf4fa3
+    HasCUDASyntax:   true
+  - MainSourceFile:  'D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel.cu'
+    Digest:          bb31628680561c2af3fda7a2240c4f08
+    HasCUDASyntax:   true
+DpctVersion:     2025.3.0
+SDKVersionMajor: '12'
+SDKVersionMinor: '9'
+MainHelperFileName: ''
+USMLevel:        ''
+FeatureMap:      {}
+CompileTargets:  {}
+OptionMap:
+  AnalysisScopePath:
+    Value:           ''
+    ValueVec:
+      - 'D:\User Files\Desktop\RotorQuant\turboquant\csrc'
+    Specified:       false
+  AsyncHandler:
+    Value:           'false'
+    Specified:       false
+  BuildScript:
+    Value:           '0'
+    Specified:       false
+  CodePinEnabled:
+    Value:           'false'
+    Specified:       false
+  CommentsEnabled:
+    Value:           'false'
+    Specified:       false
+  CompilationsDir:
+    Value:           ''
+    Specified:       false
+  CtadEnabled:
+    Value:           'false'
+    Specified:       false
+  EnablepProfiling:
+    Value:           'false'
+    Specified:       false
+  ExperimentalFlag:
+    Value:           '0'
+    Specified:       false
+  ExplicitNamespace:
+    Value:           '20'
+    Specified:       false
+  ExtensionDDFlag:
+    Value:           '0'
+    Specified:       false
+  ExtensionDEFlag:
+    Value:           '4294967295'
+    Specified:       false
+  HelperFuncPreferenceFlag:
+    Value:           '0'
+    Specified:       false
+  NDRangeDim:
+    Value:           '3'
+    Specified:       false
+  NoDRYPattern:
+    Value:           'false'
+    Specified:       false
+  OptimizeMigration:
+    Value:           'false'
+    Specified:       false
+  ProcessAll:
+    Value:           'false'
+    Specified:       false
+  RuleFile:
+    Value:           ''
+    Specified:       false
+  SyclNamedLambda:
+    Value:           'false'
+    Specified:       false
+  UseSYCLCompat:
+    Value:           'false'
+    Specified:       false
+  UsmLevel:
+    Value:           '1'
+    Specified:       false
+  VcxprojFile:
+    Value:           ''
+    Specified:       false
+...

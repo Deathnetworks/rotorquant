@@ -10,3 +10,4 @@ build/
 workflow_rules.md
 /.agents
 test_plan.md
+build_log.txt
