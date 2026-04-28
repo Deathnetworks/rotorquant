@@ -1,74 +1,42 @@
 #include <torch/extension.h>
 #include <sycl/sycl.hpp>
-#include <dpct/dpct.hpp>
+#include <c10/xpu/XPUStream.h>
 #include <cmath>
 
+#ifndef M_PI_2
+#define M_PI_2 1.57079632679489661923
+#endif
+
+template <typename T> inline float convert_to_float(T value) { return (float)value; }
+template <> inline float convert_to_float<c10::Half>(c10::Half value) { return (float)value; }
+template <> inline float convert_to_float<float>(float value) { return value; }
+template <> inline float convert_to_float<at::BFloat16>(at::BFloat16 value) { return (float)value; }
+
+template <typename T> inline T convert_from_float(float value) { return (T)value; }
+template <> inline c10::Half convert_from_float<c10::Half>(float value) { return (c10::Half)value; }
+template <> inline float convert_from_float<float>(float value) { return value; }
+template <> inline at::BFloat16 convert_from_float<at::BFloat16>(float value) { return (at::BFloat16)value; }
+
 #define WARP_SIZE 32
-#define MAX_GROUPS 128
-#define MAX_LEVELS 256
 
-template <typename T>
-SYCL_EXTERNAL float convert_to_float(T value) {
-    return 0.0f;
-}
-template <> float convert_to_float<c10::Half>(c10::Half value) { return __half2float(value); }
-template <> float convert_to_float<float>(float value) { return value; }
-template <> float convert_to_float<at::BFloat16>(at::BFloat16 value) { return static_cast<float>(value); }
+inline void geometric_product_f32(const float a[8], const float b[8], float r[8]) {
+    // S=0, E1=1, E2=2, E3=3, E12=4, E13=5, E23=6, E123=7
+    float a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a12 = a[4], a13 = a[5], a23 = a[6], a123 = a[7];
+    float b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3], b12 = b[4], b13 = b[5], b23 = b[6], b123 = b[7];
 
-template <typename T>
-SYCL_EXTERNAL T convert_from_float(float value) {
-    return static_cast<T>(0);
-}
-template <> c10::Half convert_from_float<c10::Half>(float value) { return __float2half(value); }
-template <> float convert_from_float<float>(float value) { return value; }
-template <> at::BFloat16 convert_from_float<at::BFloat16>(float value) { return static_cast<at::BFloat16>(value); }
-
-/*
- * Sparse geometric product: rotor * multivector (rotor on LEFT)
- *
- * Computes R * x where R = [s, 0, 0, 0, p12, p13, p23, 0] in Cl(3,0).
- */
-void gp_rotor_mv(
-    float s, float p12, float p13, float p23,
-    const float x[8], float r[8])
-{
-    r[0] = s*x[0] - p12*x[4] - p13*x[5] - p23*x[6];
-    r[1] = s*x[1] + p12*x[2] + p13*x[3] + p23*x[7];
-    r[2] = s*x[2] - p12*x[1] + p23*x[3] - p13*x[7];
-    r[3] = s*x[3] - p13*x[1] - p23*x[2] + p12*x[7];
-    r[4] = s*x[4] + p12*x[0] + p13*x[6] - p23*x[5];
-    r[5] = s*x[5] + p13*x[0] - p12*x[6] + p23*x[4];
-    r[6] = s*x[6] + p23*x[0] + p12*x[5] - p13*x[4];
-    r[7] = s*x[7] - p23*x[1] + p13*x[2] - p12*x[3];
+    r[0] = a0*b0 + a1*b1 + a2*b2 + a3*b3 - a12*b12 - a13*b13 - a23*b23 - a123*b123;
+    r[1] = a0*b1 + a1*b0 - a2*b12 + a12*b2 - a3*b13 + a13*b3 + a23*b123 + a123*b23;
+    r[2] = a0*b2 + a2*b0 + a1*b12 - a12*b1 - a3*b23 + a23*b3 - a13*b123 - a123*b13;
+    r[3] = a0*b3 + a3*b0 + a1*b13 - a13*b1 + a2*b23 - a23*b2 + a12*b123 + a123*b12;
+    r[4] = a0*b12 + a12*b0 + a1*b2 - a2*b1 + a13*b23 - a23*b13 + a3*b123 - a123*b3;
+    r[5] = a0*b13 + a13*b0 + a1*b3 - a3*b1 - a12*b23 + a23*b12 - a2*b123 + a123*b2;
+    r[6] = a0*b23 + a23*b0 + a2*b3 - a3*b2 + a12*b13 - a13*b12 + a1*b123 - a123*b1;
+    r[7] = a0*b123 + a123*b0 + a1*b23 - a23*b1 - a2*b13 + a13*b2 + a3*b12 - a12*b3;
 }
 
-/*
- * Sparse geometric product: multivector * rotor (rotor on RIGHT)
- *
- * Computes x * R where R = [s, 0, 0, 0, p12, p13, p23, 0] in Cl(3,0).
- * NOTE: This is DIFFERENT from R * x in non-commutative Clifford algebra.
- * The rotor sandwich R x R̃ = (R * x) * R̃ requires this right-product.
- */
-void gp_mv_rotor(
-    const float x[8],
-    float s, float p12, float p13, float p23,
-    float r[8])
-{
-    r[0] = s*x[0] - p12*x[4] - p13*x[5] - p23*x[6];
-    r[1] = s*x[1] - p12*x[2] - p13*x[3] + p23*x[7];
-    r[2] = s*x[2] + p12*x[1] - p23*x[3] - p13*x[7];
-    r[3] = s*x[3] + p13*x[1] + p23*x[2] + p12*x[7];
-    r[4] = s*x[4] + p12*x[0] + p23*x[5] - p13*x[6];
-    r[5] = s*x[5] + p13*x[0] - p23*x[4] + p12*x[6];
-    r[6] = s*x[6] + p23*x[0] + p13*x[4] - p12*x[5];
-    r[7] = s*x[7] + p23*x[1] - p13*x[2] + p12*x[3];
-}
-
-float quantize_scalar(float val, const float* __restrict__ centroids, int levels)
-{
+inline float quantize_scalar(float val, const float* __restrict__ centroids, int levels) {
     float best = centroids[0];
     float min_d = sycl::fabs(val - best);
-#pragma unroll
     for (int i = 1; i < levels; ++i) {
         float d = sycl::fabs(val - centroids[i]);
         if (d < min_d) { min_d = d; best = centroids[i]; }
@@ -76,428 +44,195 @@ float quantize_scalar(float val, const float* __restrict__ centroids, int levels
     return best;
 }
 
-/*
- * Fused RotorQuant kernel:
- *   embed → rotor_sandwich_fwd → quantize → rotor_sandwich_inv → extract
- *
- * One block per batch item. Threads iterate over groups.
- * Rotors and centroids loaded into shared memory.
- */
 template <typename T>
-/*
-DPCT1110:0: The total declared local variable size in device function
-rotor_full_fused_kernel exceeds 128 bytes and may cause high register pressure.
-Consult with your hardware vendor to find the total register size available and
-adjust the code, or use smaller sub-group size to avoid high register pressure.
-*/
+[[intel::reqd_sub_group_size(32)]]
 void rotor_full_fused_kernel(
-    const T *__restrict__ input,      // (batch, emb_dim)
-    const float *__restrict__ rotors, // (n_groups, 4): [s, b12, b13, b23]
-    const float *__restrict__ c_scalar, int n_scalar,
-    const float *__restrict__ c_vector, int n_vector,
-    const float *__restrict__ c_bivector, int n_bivector,
-    const float *__restrict__ c_trivector, int n_trivector,
-    T *__restrict__ output, // (batch, emb_dim)
-    int batch_size, int emb_dim, int n_groups, float *sh_rotors,
-    float *sh_c_scalar, float *sh_c_vector, float *sh_c_bivector,
-    float *sh_c_trivector)
-{
-    // Shared memory for rotors and centroids
+    const T* __restrict__ input, const float* __restrict__ rotors,
+    const float* __restrict__ c_scalar, int n_scalar, const float* __restrict__ c_vector, int n_vector,
+    const float* __restrict__ c_bivector, int n_bivector, const float* __restrict__ c_trivector, int n_trivector,
+    T* __restrict__ output, int batch_size, int emb_dim, int n_groups,
+    float* sh_rotors, float* sh_c_scalar, float* sh_c_vector, float* sh_c_bivector, float* sh_c_trivector) {
     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+    int bid = item_ct1.get_group(2), tid = item_ct1.get_local_id(2), threads = item_ct1.get_local_range(2);
 
-    int tid = item_ct1.get_local_id(2);
+    for (int i = tid; i < n_groups * 8; i += threads) sh_rotors[i] = rotors[i];
+    for (int i = tid; i < n_scalar; i += threads) sh_c_scalar[i] = c_scalar[i];
+    for (int i = tid; i < n_vector; i += threads) sh_c_vector[i] = c_vector[i];
+    for (int i = tid; i < n_bivector; i += threads) sh_c_bivector[i] = c_bivector[i];
+    for (int i = tid; i < n_trivector; i += threads) sh_c_trivector[i] = c_trivector[i];
+    item_ct1.barrier(sycl::access::fence_space::local_space);
 
-    // Cooperatively load rotors
-    for (int i = tid; i < n_groups * 4; i += item_ct1.get_local_range(2))
-        sh_rotors[i] = rotors[i];
+    int levels = n_scalar / n_groups;
+    int v_levels = n_vector / (n_groups * 3);
+    int b_levels = n_bivector / (n_groups * 3);
+    int t_levels = n_trivector / n_groups;
 
-    // Load centroids
-    for (int i = tid; i < n_scalar; i += item_ct1.get_local_range(2))
-        sh_c_scalar[i] = c_scalar[i];
-    for (int i = tid; i < n_vector; i += item_ct1.get_local_range(2))
-        sh_c_vector[i] = c_vector[i];
-    for (int i = tid; i < n_bivector; i += item_ct1.get_local_range(2))
-        sh_c_bivector[i] = c_bivector[i];
-    for (int i = tid; i < n_trivector; i += item_ct1.get_local_range(2))
-        sh_c_trivector[i] = c_trivector[i];
+    const T* in_ptr = input + bid * emb_dim;
+    T* out_ptr = output + bid * emb_dim;
 
-    /*
-    DPCT1065:23: Consider replacing sycl::nd_item::barrier() with
-    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
-    performance if there is no access to global memory.
-    */
-    item_ct1.barrier();
+    for (int grp = tid; grp < n_groups; grp += threads) {
+        float x_mv[8] = {0,0,0,0,0,0,0,0};
+        int d0 = grp * 3;
+        if (d0 < emb_dim) x_mv[1] = convert_to_float<T>(in_ptr[d0]);
+        if (d0 + 1 < emb_dim) x_mv[2] = convert_to_float<T>(in_ptr[d0 + 1]);
+        if (d0 + 2 < emb_dim) x_mv[3] = convert_to_float<T>(in_ptr[d0 + 2]);
 
-    int b = item_ct1.get_group(2);
-    if (b >= batch_size) return;
+        float r_fwd[8], r_rev[8], temp[8], rotated[8];
+        for (int i = 0; i < 8; i++) {
+            r_fwd[i] = sh_rotors[grp * 8 + i];
+            r_rev[i] = (i < 4) ? r_fwd[i] : -r_fwd[i];
+        }
+        geometric_product_f32(r_fwd, x_mv, temp);
+        geometric_product_f32(temp, r_rev, rotated);
 
-    const T* in_ptr = input + b * emb_dim;
-    T* out_ptr = output + b * emb_dim;
+        float q_mv[8] = {0.0f};
+        q_mv[0] = quantize_scalar(rotated[0], sh_c_scalar + grp*levels, levels);
+        q_mv[1] = quantize_scalar(rotated[1], sh_c_vector + grp*3*v_levels, v_levels);
+        q_mv[2] = quantize_scalar(rotated[2], sh_c_vector + (grp*3+1)*v_levels, v_levels);
+        q_mv[3] = quantize_scalar(rotated[3], sh_c_vector + (grp*3+2)*v_levels, v_levels);
+        q_mv[4] = quantize_scalar(rotated[4], sh_c_bivector + grp*3*b_levels, b_levels);
+        q_mv[5] = quantize_scalar(rotated[5], sh_c_bivector + (grp*3+1)*b_levels, b_levels);
+        q_mv[6] = quantize_scalar(rotated[6], sh_c_bivector + (grp*3+2)*b_levels, b_levels);
+        q_mv[7] = quantize_scalar(rotated[7], sh_c_trivector + grp*t_levels, t_levels);
 
-    // Each thread handles one or more groups
-    for (int g = tid; g < n_groups; g += item_ct1.get_local_range(2)) {
-        // Load rotor
-        float s   = sh_rotors[g * 4 + 0];
-        float p12 = sh_rotors[g * 4 + 1];
-        float p13 = sh_rotors[g * 4 + 2];
-        float p23 = sh_rotors[g * 4 + 3];
-
-        // Embed: 3 vector dims → multivector (grade-1 only)
-        int d0 = g * 3;
-        float x_mv[8] = {0.0f};
-        if (d0     < emb_dim) x_mv[1] = convert_to_float(in_ptr[d0]);
-        if (d0 + 1 < emb_dim) x_mv[2] = convert_to_float(in_ptr[d0 + 1]);
-        if (d0 + 2 < emb_dim) x_mv[3] = convert_to_float(in_ptr[d0 + 2]);
-
-        // Forward sandwich: R x R̃ = (R * x) * R̃
-        float temp[8], rotated[8];
-        gp_rotor_mv(s, p12, p13, p23, x_mv, temp);        // LEFT: R * x
-        gp_mv_rotor(temp, s, -p12, -p13, -p23, rotated);  // RIGHT: temp * R̃
-
-        // Grade-aware quantization
-        float q_mv[8];
-        q_mv[0] = quantize_scalar(rotated[0], sh_c_scalar,   n_scalar);
-        q_mv[1] = quantize_scalar(rotated[1], sh_c_vector,   n_vector);
-        q_mv[2] = quantize_scalar(rotated[2], sh_c_vector,   n_vector);
-        q_mv[3] = quantize_scalar(rotated[3], sh_c_vector,   n_vector);
-        q_mv[4] = quantize_scalar(rotated[4], sh_c_bivector, n_bivector);
-        q_mv[5] = quantize_scalar(rotated[5], sh_c_bivector, n_bivector);
-        q_mv[6] = quantize_scalar(rotated[6], sh_c_bivector, n_bivector);
-        q_mv[7] = quantize_scalar(rotated[7], sh_c_trivector,n_trivector);
-
-        // Inverse sandwich: R̃ q R = (R̃ * q) * R
         float temp2[8], final_mv[8];
-        gp_rotor_mv(s, -p12, -p13, -p23, q_mv, temp2);    // LEFT: R̃ * q
-        gp_mv_rotor(temp2, s, p12, p13, p23, final_mv);    // RIGHT: temp2 * R
+        geometric_product_f32(r_rev, q_mv, temp2);
+        geometric_product_f32(temp2, r_fwd, final_mv);
 
-        // Extract vector grades back to output
-        if (d0     < emb_dim) out_ptr[d0]     = convert_from_float<T>(final_mv[1]);
+        if (d0 < emb_dim) out_ptr[d0] = convert_from_float<T>(final_mv[1]);
         if (d0 + 1 < emb_dim) out_ptr[d0 + 1] = convert_from_float<T>(final_mv[2]);
         if (d0 + 2 < emb_dim) out_ptr[d0 + 2] = convert_from_float<T>(final_mv[3]);
     }
 }
 
-/*
- * Standalone rotor sandwich (no quantization).
- * Useful for the inner_product path where we only need rotor decorrelation.
- */
 template <typename T>
-/*
-DPCT1110:1: The total declared local variable size in device function
-rotor_sandwich_kernel exceeds 128 bytes and may cause high register pressure.
-Consult with your hardware vendor to find the total register size available and
-adjust the code, or use smaller sub-group size to avoid high register pressure.
-*/
-void rotor_sandwich_kernel(const T *__restrict__ input,      // (batch, emb_dim)
-                           const float *__restrict__ rotors, // (n_groups, 4)
-                           T *__restrict__ output, // (batch, n_groups, 8)
-                           int batch_size, int emb_dim, int n_groups,
-                           float *sh_rotors)
-{
+[[intel::reqd_sub_group_size(32)]]
+void rotor_sandwich_kernel(const T* __restrict__ input, const float* __restrict__ rotors, T* __restrict__ output, int batch_size, int emb_dim, int n_groups, float* sh_rotors) {
     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
-
-    int tid = item_ct1.get_local_id(2);
-    for (int i = tid; i < n_groups * 4; i += item_ct1.get_local_range(2))
-        sh_rotors[i] = rotors[i];
-    /*
-    DPCT1065:24: Consider replacing sycl::nd_item::barrier() with
-    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
-    performance if there is no access to global memory.
-    */
-    item_ct1.barrier();
-
-    int b = item_ct1.get_group(2);
-    if (b >= batch_size) return;
-
-    const T* in_ptr = input + b * emb_dim;
-    T* out_ptr = output + b * n_groups * 8;
-
-    for (int g = tid; g < n_groups; g += item_ct1.get_local_range(2)) {
-        float s   = sh_rotors[g * 4 + 0];
-        float p12 = sh_rotors[g * 4 + 1];
-        float p13 = sh_rotors[g * 4 + 2];
-        float p23 = sh_rotors[g * 4 + 3];
-
-        int d0 = g * 3;
-        float x_mv[8] = {0.0f};
-        if (d0     < emb_dim) x_mv[1] = convert_to_float(in_ptr[d0]);
-        if (d0 + 1 < emb_dim) x_mv[2] = convert_to_float(in_ptr[d0 + 1]);
-        if (d0 + 2 < emb_dim) x_mv[3] = convert_to_float(in_ptr[d0 + 2]);
-
-        float temp[8], rotated[8];
-        gp_rotor_mv(s, p12, p13, p23, x_mv, temp);        // LEFT: R * x
-        gp_mv_rotor(temp, s, -p12, -p13, -p23, rotated);  // RIGHT: temp * R̃
-
-        int base = g * 8;
-        #pragma unroll
-        for (int c = 0; c < 8; ++c)
-            out_ptr[base + c] = convert_from_float<T>(rotated[c]);
+    int bid = item_ct1.get_group(2), tid = item_ct1.get_local_id(2), threads = item_ct1.get_local_range(2);
+    for (int i = tid; i < n_groups * 8; i += threads) sh_rotors[i] = rotors[i];
+    item_ct1.barrier(sycl::access::fence_space::local_space);
+    const T* in_ptr = input + bid * emb_dim;
+    T* out_ptr = output + bid * n_groups * 8;
+    for (int grp = tid; grp < n_groups; grp += threads) {
+        float x_mv[8] = {0,0,0,0,0,0,0,0};
+        int d0 = grp * 3;
+        if (d0 < emb_dim) x_mv[1] = convert_to_float<T>(in_ptr[d0]);
+        if (d0 + 1 < emb_dim) x_mv[2] = convert_to_float<T>(in_ptr[d0 + 1]);
+        if (d0 + 2 < emb_dim) x_mv[3] = convert_to_float<T>(in_ptr[d0 + 2]);
+        float r_fwd[8], r_rev[8], temp[8], rotated[8];
+        for (int i = 0; i < 8; i++) {
+            r_fwd[i] = sh_rotors[grp * 8 + i];
+            r_rev[i] = (i < 4) ? r_fwd[i] : -r_fwd[i];
+        }
+        geometric_product_f32(r_fwd, x_mv, temp);
+        geometric_product_f32(temp, r_rev, rotated);
+        for (int i = 0; i < 8; i++) out_ptr[grp * 8 + i] = convert_from_float<T>(rotated[i]);
     }
 }
 
-/*
- * Inverse rotor sandwich: reconstruct vectors from multivectors.
- */
 template <typename T>
-/*
-DPCT1110:2: The total declared local variable size in device function
-rotor_inverse_sandwich_kernel exceeds 128 bytes and may cause high register
-pressure. Consult with your hardware vendor to find the total register size
-available and adjust the code, or use smaller sub-group size to avoid high
-register pressure.
-*/
-void rotor_inverse_sandwich_kernel(
-    const T *__restrict__ input_mv,   // (batch, n_groups, 8)
-    const float *__restrict__ rotors, // (n_groups, 4)
-    T *__restrict__ output,           // (batch, emb_dim)
-    int batch_size, int emb_dim, int n_groups, float *sh_rotors)
-{
+[[intel::reqd_sub_group_size(32)]]
+void rotor_inverse_sandwich_kernel(const T* __restrict__ input, const float* __restrict__ rotors, T* __restrict__ output, int batch_size, int emb_dim, int n_groups, float* sh_rotors) {
     auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
-
-    int tid = item_ct1.get_local_id(2);
-    for (int i = tid; i < n_groups * 4; i += item_ct1.get_local_range(2))
-        sh_rotors[i] = rotors[i];
-    /*
-    DPCT1065:25: Consider replacing sycl::nd_item::barrier() with
-    sycl::nd_item::barrier(sycl::access::fence_space::local_space) for better
-    performance if there is no access to global memory.
-    */
-    item_ct1.barrier();
-
-    int b = item_ct1.get_group(2);
-    if (b >= batch_size) return;
-
-    const T* in_ptr = input_mv + b * n_groups * 8;
-    T* out_ptr = output + b * emb_dim;
-
-    for (int g = tid; g < n_groups; g += item_ct1.get_local_range(2)) {
-        float s   = sh_rotors[g * 4 + 0];
-        float p12 = sh_rotors[g * 4 + 1];
-        float p13 = sh_rotors[g * 4 + 2];
-        float p23 = sh_rotors[g * 4 + 3];
-
-        int base = g * 8;
-        float q_mv[8];
-        #pragma unroll
-        for (int c = 0; c < 8; ++c)
-            q_mv[c] = convert_to_float(in_ptr[base + c]);
-
-        float temp[8], final_mv[8];
-        gp_rotor_mv(s, -p12, -p13, -p23, q_mv, temp);    // LEFT: R̃ * q
-        gp_mv_rotor(temp, s, p12, p13, p23, final_mv);    // RIGHT: temp * R
-
-        int d0 = g * 3;
-        if (d0     < emb_dim) out_ptr[d0]     = convert_from_float<T>(final_mv[1]);
-        if (d0 + 1 < emb_dim) out_ptr[d0 + 1] = convert_from_float<T>(final_mv[2]);
-        if (d0 + 2 < emb_dim) out_ptr[d0 + 2] = convert_from_float<T>(final_mv[3]);
+    int bid = item_ct1.get_group(2), tid = item_ct1.get_local_id(2), threads = item_ct1.get_local_range(2);
+    for (int i = tid; i < n_groups * 8; i += threads) sh_rotors[i] = rotors[i];
+    item_ct1.barrier(sycl::access::fence_space::local_space);
+    const T* in_ptr = input + bid * n_groups * 8;
+    T* out_ptr = output + bid * emb_dim;
+    for (int grp = tid; grp < n_groups; grp += threads) {
+        float x_mv[8];
+        for (int i = 0; i < 8; i++) x_mv[i] = convert_to_float<T>(in_ptr[grp * 8 + i]);
+        float r_fwd[8], r_rev[8], temp[8], rotated[8];
+        for (int i = 0; i < 8; i++) {
+            r_fwd[i] = sh_rotors[grp * 8 + i];
+            r_rev[i] = (i < 4) ? r_fwd[i] : -r_fwd[i];
+        }
+        // Inverse sandwich is R_rev x R
+        geometric_product_f32(r_rev, x_mv, temp);
+        geometric_product_f32(temp, r_fwd, rotated);
+        int d0 = grp * 3;
+        if (d0 < emb_dim) out_ptr[d0] = convert_from_float<T>(rotated[1]);
+        if (d0 + 1 < emb_dim) out_ptr[d0 + 1] = convert_from_float<T>(rotated[2]);
+        if (d0 + 2 < emb_dim) out_ptr[d0 + 2] = convert_from_float<T>(rotated[3]);
     }
 }
 
-// ─── Template instantiations and pybind11 ───
-
 template <typename T>
-torch::Tensor rotor_full_fused_impl(
-    torch::Tensor input, torch::Tensor rotors,
-    torch::Tensor c_scalar, int n_scalar,
-    torch::Tensor c_vector, int n_vector,
-    torch::Tensor c_bivector, int n_bivector,
-    torch::Tensor c_trivector, int n_trivector)
-{
-    int batch_size = input.size(0);
-    int emb_dim = input.size(1);
+torch::Tensor rotor_full_fused_impl(torch::Tensor input, torch::Tensor rotors, torch::Tensor c_scalar, int n_scalar, torch::Tensor c_vector, int n_vector, torch::Tensor c_bivector, int n_bivector, torch::Tensor c_trivector, int n_trivector) {
+    int emb_dim = input.size(-1);
+    int batch_size = input.numel() / emb_dim;
     int n_groups = (emb_dim + 2) / 3;
-
     auto output = torch::empty_like(input);
-
     int threads = std::min(256, std::max(n_groups, WARP_SIZE));
-    dpct::dim3 blocks(batch_size);
-
-    /*
-    DPCT1049:3: The work-group size passed to the SYCL kernel may exceed the
-    limit. To get the device limit, query info::device::max_work_group_size.
-    Adjust the work-group size if needed.
-    */
-    dpct::get_in_order_queue().submit([&](sycl::handler &cgh) {
-        /*
-        DPCT1101:48: 'MAX_GROUPS * 4' expression was replaced with a value.
-        Modify the code to use the original expression, provided in comments, if
-        it is correct.
-        */
-        sycl::local_accessor<float, 1> sh_rotors_acc_ct1(
-            sycl::range<1>(512 /*MAX_GROUPS * 4*/), cgh);
-        /*
-        DPCT1101:49: 'MAX_LEVELS' expression was replaced with a value. Modify
-        the code to use the original expression, provided in comments, if it is
-        correct.
-        */
-        sycl::local_accessor<float, 1> sh_c_scalar_acc_ct1(
-            sycl::range<1>(256 /*MAX_LEVELS*/), cgh);
-        /*
-        DPCT1101:50: 'MAX_LEVELS' expression was replaced with a value. Modify
-        the code to use the original expression, provided in comments, if it is
-        correct.
-        */
-        sycl::local_accessor<float, 1> sh_c_vector_acc_ct1(
-            sycl::range<1>(256 /*MAX_LEVELS*/), cgh);
-        /*
-        DPCT1101:51: 'MAX_LEVELS' expression was replaced with a value. Modify
-        the code to use the original expression, provided in comments, if it is
-        correct.
-        */
-        sycl::local_accessor<float, 1> sh_c_bivector_acc_ct1(
-            sycl::range<1>(256 /*MAX_LEVELS*/), cgh);
-        /*
-        DPCT1101:52: 'MAX_LEVELS' expression was replaced with a value. Modify
-        the code to use the original expression, provided in comments, if it is
-        correct.
-        */
-        sycl::local_accessor<float, 1> sh_c_trivector_acc_ct1(
-            sycl::range<1>(256 /*MAX_LEVELS*/), cgh);
-
-        auto input_data_ptr_T_ct0 = input.data_ptr<T>();
-        auto rotors_data_ptr_float_ct1 = rotors.data_ptr<float>();
-        auto c_scalar_data_ptr_float_ct2 = c_scalar.data_ptr<float>();
-        auto c_vector_data_ptr_float_ct4 = c_vector.data_ptr<float>();
-        auto c_bivector_data_ptr_float_ct6 = c_bivector.data_ptr<float>();
-        auto c_trivector_data_ptr_float_ct8 = c_trivector.data_ptr<float>();
-        auto output_data_ptr_T_ct10 = output.data_ptr<T>();
-
-        cgh.parallel_for(
-            sycl::nd_range<3>(blocks * sycl::range<3>(1, 1, threads),
-                              sycl::range<3>(1, 1, threads)),
-            [=](sycl::nd_item<3> item_ct1) {
-                rotor_full_fused_kernel<T>(
-                    input_data_ptr_T_ct0, rotors_data_ptr_float_ct1,
-                    c_scalar_data_ptr_float_ct2, n_scalar,
-                    c_vector_data_ptr_float_ct4, n_vector,
-                    c_bivector_data_ptr_float_ct6, n_bivector,
-                    c_trivector_data_ptr_float_ct8, n_trivector,
-                    output_data_ptr_T_ct10, batch_size, emb_dim, n_groups,
-                    sh_rotors_acc_ct1
-                        .get_multi_ptr<sycl::access::decorated::no>()
-                        .get(),
-                    sh_c_scalar_acc_ct1
-                        .get_multi_ptr<sycl::access::decorated::no>()
-                        .get(),
-                    sh_c_vector_acc_ct1
-                        .get_multi_ptr<sycl::access::decorated::no>()
-                        .get(),
-                    sh_c_bivector_acc_ct1
-                        .get_multi_ptr<sycl::access::decorated::no>()
-                        .get(),
-                    sh_c_trivector_acc_ct1
-                        .get_multi_ptr<sycl::access::decorated::no>()
-                        .get());
-            });
+    c10::xpu::getCurrentXPUStream().queue().submit([&](sycl::handler &cgh) {
+        sycl::local_accessor<float, 1> sh_rotors(sycl::range<1>(n_groups * 8), cgh), sh_c_scalar(sycl::range<1>(n_scalar), cgh), sh_c_vector(sycl::range<1>(n_vector), cgh), sh_c_bivector(sycl::range<1>(n_bivector), cgh), sh_c_trivector(sycl::range<1>(n_trivector), cgh);
+        auto in_p = input.data_ptr<T>();
+        auto r_p = rotors.data_ptr<float>();
+        auto cs_p = c_scalar.data_ptr<float>();
+        auto cv_p = c_vector.data_ptr<float>();
+        auto cb_p = c_bivector.data_ptr<float>();
+        auto ct_p = c_trivector.data_ptr<float>();
+        auto out_p = output.data_ptr<T>();
+        cgh.parallel_for(sycl::nd_range<3>(sycl::range<3>(1, 1, batch_size) * sycl::range<3>(1, 1, threads), sycl::range<3>(1, 1, threads)), [=](sycl::nd_item<3> item) [[sycl::reqd_sub_group_size(32)]] {
+            rotor_full_fused_kernel<T>(in_p, r_p, cs_p, n_scalar, cv_p, n_vector, cb_p, n_bivector, ct_p, n_trivector, out_p, batch_size, emb_dim, n_groups, sh_rotors.get_pointer(), sh_c_scalar.get_pointer(), sh_c_vector.get_pointer(), sh_c_bivector.get_pointer(), sh_c_trivector.get_pointer());
+        });
     });
-
     return output;
 }
 
 template <typename T>
-torch::Tensor rotor_sandwich_impl(
-    torch::Tensor input, torch::Tensor rotors)
-{
-    int batch_size = input.size(0);
-    int emb_dim = input.size(1);
+torch::Tensor rotor_sandwich_impl(torch::Tensor input, torch::Tensor rotors) {
+    int emb_dim = input.size(-1);
+    int batch_size = input.numel() / emb_dim;
     int n_groups = (emb_dim + 2) / 3;
-
-    auto output = torch::empty({batch_size, n_groups, 8}, input.options());
-
+    std::vector<int64_t> out_shape;
+    for (int i=0; i<input.dim()-1; i++) out_shape.push_back(input.size(i));
+    out_shape.push_back(n_groups);
+    out_shape.push_back(8);
+    auto output = torch::empty(out_shape, input.options());
     int threads = std::min(256, std::max(n_groups, WARP_SIZE));
-    /*
-    DPCT1049:4: The work-group size passed to the SYCL kernel may exceed the
-    limit. To get the device limit, query info::device::max_work_group_size.
-    Adjust the work-group size if needed.
-    */
-    dpct::get_in_order_queue().submit([&](sycl::handler &cgh) {
-        /*
-        DPCT1101:53: 'MAX_GROUPS * 4' expression was replaced with a value.
-        Modify the code to use the original expression, provided in comments, if
-        it is correct.
-        */
-        sycl::local_accessor<float, 1> sh_rotors_acc_ct1(
-            sycl::range<1>(512 /*MAX_GROUPS * 4*/), cgh);
-
-        auto input_data_ptr_T_ct0 = input.data_ptr<T>();
-        auto rotors_data_ptr_float_ct1 = rotors.data_ptr<float>();
-        auto output_data_ptr_T_ct2 = output.data_ptr<T>();
-
-        cgh.parallel_for(
-            sycl::nd_range<3>(sycl::range<3>(1, 1, batch_size) *
-                                  sycl::range<3>(1, 1, threads),
-                              sycl::range<3>(1, 1, threads)),
-            [=](sycl::nd_item<3> item_ct1) {
-                rotor_sandwich_kernel<T>(
-                    input_data_ptr_T_ct0, rotors_data_ptr_float_ct1,
-                    output_data_ptr_T_ct2, batch_size, emb_dim, n_groups,
-                    sh_rotors_acc_ct1
-                        .get_multi_ptr<sycl::access::decorated::no>()
-                        .get());
-            });
+    c10::xpu::getCurrentXPUStream().queue().submit([&](sycl::handler &cgh) {
+        sycl::local_accessor<float, 1> sh_rotors(sycl::range<1>(n_groups * 8), cgh);
+        auto in_p = input.data_ptr<T>();
+        auto r_p = rotors.data_ptr<float>();
+        auto out_p = output.data_ptr<T>();
+        cgh.parallel_for(sycl::nd_range<3>(sycl::range<3>(1, 1, batch_size) * sycl::range<3>(1, 1, threads), sycl::range<3>(1, 1, threads)), [=](sycl::nd_item<3> item) [[sycl::reqd_sub_group_size(32)]] {
+            rotor_sandwich_kernel<T>(in_p, r_p, out_p, batch_size, emb_dim, n_groups, sh_rotors.get_pointer());
+        });
     });
-
     return output;
 }
 
 template <typename T>
-torch::Tensor rotor_inverse_impl(
-    torch::Tensor input_mv, torch::Tensor rotors, int emb_dim)
-{
-    int batch_size = input_mv.size(0);
-    int n_groups = input_mv.size(1);
-
-    auto output = torch::empty({batch_size, emb_dim}, input_mv.options());
-
+torch::Tensor rotor_inverse_sandwich_impl(torch::Tensor input, torch::Tensor rotors, int emb_dim) {
+    int n_groups = input.size(-2);
+    int batch_size = input.numel() / (n_groups * 8);
+    std::vector<int64_t> out_shape;
+    for (int i=0; i<input.dim()-2; i++) out_shape.push_back(input.size(i));
+    out_shape.push_back(emb_dim);
+    auto output = torch::empty(out_shape, input.options());
     int threads = std::min(256, std::max(n_groups, WARP_SIZE));
-    /*
-    DPCT1049:5: The work-group size passed to the SYCL kernel may exceed the
-    limit. To get the device limit, query info::device::max_work_group_size.
-    Adjust the work-group size if needed.
-    */
-    dpct::get_in_order_queue().submit([&](sycl::handler &cgh) {
-        /*
-        DPCT1101:54: 'MAX_GROUPS * 4' expression was replaced with a value.
-        Modify the code to use the original expression, provided in comments, if
-        it is correct.
-        */
-        sycl::local_accessor<float, 1> sh_rotors_acc_ct1(
-            sycl::range<1>(512 /*MAX_GROUPS * 4*/), cgh);
-
-        auto input_mv_data_ptr_T_ct0 = input_mv.data_ptr<T>();
-        auto rotors_data_ptr_float_ct1 = rotors.data_ptr<float>();
-        auto output_data_ptr_T_ct2 = output.data_ptr<T>();
-
-        cgh.parallel_for(
-            sycl::nd_range<3>(sycl::range<3>(1, 1, batch_size) *
-                                  sycl::range<3>(1, 1, threads),
-                              sycl::range<3>(1, 1, threads)),
-            [=](sycl::nd_item<3> item_ct1) {
-                rotor_inverse_sandwich_kernel<T>(
-                    input_mv_data_ptr_T_ct0, rotors_data_ptr_float_ct1,
-                    output_data_ptr_T_ct2, batch_size, emb_dim, n_groups,
-                    sh_rotors_acc_ct1
-                        .get_multi_ptr<sycl::access::decorated::no>()
-                        .get());
-            });
+    c10::xpu::getCurrentXPUStream().queue().submit([&](sycl::handler &cgh) {
+        sycl::local_accessor<float, 1> sh_rotors(sycl::range<1>(n_groups * 8), cgh);
+        auto in_p = input.data_ptr<T>();
+        auto r_p = rotors.data_ptr<float>();
+        auto out_p = output.data_ptr<T>();
+        cgh.parallel_for(sycl::nd_range<3>(sycl::range<3>(1, 1, batch_size) * sycl::range<3>(1, 1, threads), sycl::range<3>(1, 1, threads)), [=](sycl::nd_item<3> item) [[sycl::reqd_sub_group_size(32)]] {
+            rotor_inverse_sandwich_kernel<T>(in_p, r_p, out_p, batch_size, emb_dim, n_groups, sh_rotors.get_pointer());
+        });
     });
-
     return output;
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-    // Fused full pipeline
-    m.def("rotor_full_fused_float", &rotor_full_fused_impl<float>);
     m.def("rotor_full_fused_half", &rotor_full_fused_impl<c10::Half>);
+    m.def("rotor_full_fused_float", &rotor_full_fused_impl<float>);
     m.def("rotor_full_fused_bf16", &rotor_full_fused_impl<at::BFloat16>);
-
-    // Standalone sandwich (forward)
-    m.def("rotor_sandwich_float", &rotor_sandwich_impl<float>);
     m.def("rotor_sandwich_half", &rotor_sandwich_impl<c10::Half>);
+    m.def("rotor_sandwich_float", &rotor_sandwich_impl<float>);
     m.def("rotor_sandwich_bf16", &rotor_sandwich_impl<at::BFloat16>);
-
-    // Inverse sandwich
-    m.def("rotor_inverse_float", &rotor_inverse_impl<float>);
-    m.def("rotor_inverse_half", &rotor_inverse_impl<c10::Half>);
-    m.def("rotor_inverse_bf16", &rotor_inverse_impl<at::BFloat16>);
+    m.def("rotor_inverse_half", &rotor_inverse_sandwich_impl<c10::Half>);
+    m.def("rotor_inverse_float", &rotor_inverse_sandwich_impl<float>);
+    m.def("rotor_inverse_bf16", &rotor_inverse_sandwich_impl<at::BFloat16>);
 }

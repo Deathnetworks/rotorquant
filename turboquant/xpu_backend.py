@@ -87,11 +87,11 @@ def qjl_quant(key_states, outlier_indices, rand_prj, outlier_sketch_dim):
     rand_dtype = rand_prj.dtype
 
     dispatch = {
-        (torch.half, torch.half): 'qjl_quant_half_half',
-        (torch.half, torch.float): 'qjl_quant_half_float',
-        (torch.float, torch.float): 'qjl_quant_float_float',
-        (torch.bfloat16, torch.bfloat16): 'qjl_quant_bf16_bf16',
-        (torch.bfloat16, torch.float): 'qjl_quant_bf16_float',
+        (torch.half, torch.half): 'qjl_quant_xpu_half_half',
+        (torch.half, torch.float): 'qjl_quant_xpu_half_float',
+        (torch.float, torch.float): 'qjl_quant_xpu_float_float',
+        (torch.bfloat16, torch.bfloat16): 'qjl_quant_xpu_bf16_bf16',
+        (torch.bfloat16, torch.float): 'qjl_quant_xpu_bf16_float',
     }
     fn_name = dispatch.get((key_dtype, rand_dtype))
     if fn_name is None:
@@ -105,11 +105,11 @@ def qjl_score(key_quant, key_outlier_quant, key_norm, key_outlier_norm,
     rand_dtype = rand_prj.dtype
 
     dispatch = {
-        (torch.half, torch.half): 'qjl_score_cuda_half_half',
-        (torch.half, torch.float): 'qjl_score_cuda_half_float',
-        (torch.float, torch.float): 'qjl_score_cuda_float_float',
-        (torch.bfloat16, torch.bfloat16): 'qjl_score_cuda_bf16_bf16',
-        (torch.bfloat16, torch.float): 'qjl_score_cuda_bf16_float',
+        (torch.half, torch.half): 'qjl_score_xpu_half_half',
+        (torch.half, torch.float): 'qjl_score_xpu_half_float',
+        (torch.float, torch.float): 'qjl_score_xpu_float_float',
+        (torch.bfloat16, torch.bfloat16): 'qjl_score_xpu_bf16_bf16',
+        (torch.bfloat16, torch.float): 'qjl_score_xpu_bf16_float',
     }
     fn_name = dispatch.get((query_dtype, rand_dtype))
     if fn_name is None:
@@ -125,11 +125,11 @@ def qjl_gqa_score(key_quant, key_outlier_quant, key_norm, key_outlier_norm,
     rand_dtype = rand_prj.dtype
 
     dispatch = {
-        (torch.half, torch.half): 'qjl_gqa_score_cuda_half_half',
-        (torch.half, torch.float): 'qjl_gqa_score_cuda_half_float',
-        (torch.float, torch.float): 'qjl_gqa_score_cuda_float_float',
-        (torch.bfloat16, torch.bfloat16): 'qjl_gqa_score_cuda_bf16_bf16',
-        (torch.bfloat16, torch.float): 'qjl_gqa_score_cuda_bf16_float',
+        (torch.half, torch.half): 'qjl_gqa_score_xpu_half_half',
+        (torch.half, torch.float): 'qjl_gqa_score_xpu_half_float',
+        (torch.float, torch.float): 'qjl_gqa_score_xpu_float_float',
+        (torch.bfloat16, torch.bfloat16): 'qjl_gqa_score_xpu_bf16_bf16',
+        (torch.bfloat16, torch.float): 'qjl_gqa_score_xpu_bf16_float',
     }
     fn_name = dispatch.get((query_dtype, rand_dtype))
     if fn_name is None:
