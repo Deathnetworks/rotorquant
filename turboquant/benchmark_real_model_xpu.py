@@ -65,7 +65,7 @@ def benchmark_real_model(model_id="Qwen/Qwen2-0.5B-Instruct"):
     codebooks_iso = calibrate_xpu.calibrate_xpu(model, tokenizer, bits=4, mode='iso')
     # For iso, calibrate_xpu currently returns {'iso_centroids': ...}. 
     # We need to adapt it slightly or mock rotors for simplicity.
-    iso_qL = {i: isoquant.make_random_unit_quaternion((model.config.hidden_size // model.config.num_attention_heads + 3)//4, device=device) for i in range(model.config.num_hidden_layers)}
+    iso_qL = {i: isoquant.make_random_unit_quaternion(((model.config.hidden_size // model.config.num_attention_heads + 3)//4,), device=device) for i in range(model.config.num_hidden_layers)}
     
     # 2. Benchmark Configurations
     configs = [
@@ -81,30 +81,48 @@ def benchmark_real_model(model_id="Qwen/Qwen2-0.5B-Instruct"):
     results = []
     
     # Testing Context Sizes
-    context_sizes = [1024, 4096, 16384, 65536, 131072, 262144]
+    # Testing Context Sizes - Capped for stability on Arc Pro B70
+    context_sizes = [1024, 4096, 16384, 32768]
     
     for cfg in configs:
-        print(f"\nTesting Config: {cfg['name']}")
-        ppl = evaluate_ppl(model, tokenizer, cache_class=cfg['cache_class'], model_config=model.config, **cfg['kwargs'])
-        print(f"  PPL: {ppl:.4f}")
+        print(f"Testing Config: {cfg['name']}", flush=True)
+        # Baseline DynamicCache doesn't take model_config, but our custom ones do.
+        kwargs = cfg['kwargs'].copy()
+        if cfg['cache_class'] != DynamicCache:
+            kwargs['model_config'] = model.config
+        
+        print(f"  Evaluating PPL...", flush=True)
+        ppl = evaluate_ppl(model, tokenizer, cache_class=cfg['cache_class'], **kwargs)
+        print(f"  PPL: {ppl:.4f}", flush=True)
         
         for ctx in context_sizes:
+            # Skip excessive context for baseline to avoid hang
+            if cfg['name'] == "FP16 (Baseline)" and ctx > 32768:
+                print(f"  Ctx={ctx:>7d}: SKIPPED (Baseline VRAM limit)", flush=True)
+                continue
+            
+            print(f"  Testing Context Size: {ctx}...", flush=True)
             # We skip 256k if VRAM is tight, but attempting for benchmark
             try:
+                torch.xpu.empty_cache()
                 # Prefill Speed
                 input_ids = torch.randint(0, model.config.vocab_size, (1, ctx), device=device)
                 torch.xpu.synchronize()
                 t0 = time.perf_counter()
                 with torch.no_grad():
-                    cache = cfg['cache_class'](model.config, **cfg['kwargs'])
+                    if cfg['cache_class'] == DynamicCache:
+                        cache = cfg['cache_class']()
+                    else:
+                        cache = cfg['cache_class'](model.config, **cfg['kwargs'])
                     model(input_ids, past_key_values=cache, use_cache=True)
                 torch.xpu.synchronize()
                 prefill_time = time.perf_counter() - t0
                 
-                # Decode Speed (next 10 tokens)
+                # Decode Speed (next 5 tokens) - Reduced for speed
                 decode_times = []
                 curr_ids = torch.randint(0, model.config.vocab_size, (1, 1), device=device)
-                for _ in range(10):
+                for _ in range(5):
+                    torch.xpu.empty_cache()
                     t1 = time.perf_counter()
                     with torch.no_grad():
                         model(curr_ids, past_key_values=cache, use_cache=True)
@@ -112,7 +130,7 @@ def benchmark_real_model(model_id="Qwen/Qwen2-0.5B-Instruct"):
                     decode_times.append(time.perf_counter() - t1)
                 decode_time_avg = sum(decode_times) / len(decode_times)
                 
-                print(f"  Ctx={ctx:>7d}: Prefill={prefill_time:7.3f}s | Decode={decode_time_avg*1000:7.2f}ms")
+                print(f"  Ctx={ctx:>7d}: Prefill={prefill_time:7.3f}s | Decode={decode_time_avg*1000:7.2f}ms", flush=True)
                 
                 # Needle in a Haystack (Simplified: can we recover the last token hidden in context)
                 # For brevity in benchmark, we just note the success of the forward pass.

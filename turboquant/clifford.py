@@ -23,18 +23,23 @@ MV_DIM = 8  # 2^3 components for Cl(3,0)
 def geometric_product(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     """
     Full Cl(3,0) geometric product: a * b
-
-    Input:  a, b of shape (..., 8)
-    Output: result of shape (..., 8)
-
-    Multiplication table for Cl(3,0) with signature (+,+,+):
-        e_i * e_i = +1  for i in {1,2,3}
-        e_i * e_j = -e_j * e_i  for i != j
     """
+    if a.size(-1) == 4:
+        # Expand compact rotor [s, p12, p13, p23] to [s, 0,0,0, p12, p13, p23, 0]
+        a_full = torch.zeros(*a.shape[:-1], 8, dtype=a.dtype, device=a.device)
+        a_full[..., 0] = a[..., 0]
+        a_full[..., 4:7] = a[..., 1:4]
+        a = a_full
+    if b.size(-1) == 4:
+        b_full = torch.zeros(*b.shape[:-1], 8, dtype=b.dtype, device=b.device)
+        b_full[..., 0] = b[..., 0]
+        b_full[..., 4:7] = b[..., 1:4]
+        b = b_full
+
     # Unbind components
     a0, a1, a2, a3, a12, a13, a23, a123 = a.unbind(dim=-1)
     b0, b1, b2, b3, b12, b13, b23, b123 = b.unbind(dim=-1)
-
+    # ... (rest of the logic remains same, but we need to provide it in the replacement)
     # Grade 0 (scalar)
     r0 = (a0*b0 + a1*b1 + a2*b2 + a3*b3
            - a12*b12 - a13*b13 - a23*b23 - a123*b123)
@@ -65,15 +70,13 @@ def geometric_product(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
 def reverse(x: torch.Tensor) -> torch.Tensor:
     """
     Clifford reverse (reversion) x̃: reverses the order of basis vectors.
-
-    Grade 0, 1: unchanged (sign = +1)
-    Grade 2:    negated   (sign = -1)
-    Grade 3:    negated   (sign = -1)
-
-    This is used for rotor conjugation: R x R̃
     """
-    signs = torch.tensor([1, 1, 1, 1, -1, -1, -1, -1],
-                         dtype=x.dtype, device=x.device)
+    if x.size(-1) == 8:
+        signs = torch.tensor([1, 1, 1, 1, -1, -1, -1, -1],
+                             dtype=x.dtype, device=x.device)
+    else: # compact 4-component [s, p12, p13, p23]
+        signs = torch.tensor([1, -1, -1, -1],
+                             dtype=x.dtype, device=x.device)
     return x * signs
 
 
@@ -87,11 +90,6 @@ def multivector_norm_sq(x: torch.Tensor) -> torch.Tensor:
 def make_rotor(bivector: torch.Tensor, angle: torch.Tensor) -> torch.Tensor:
     """
     Create a rotor R = cos(θ/2) + sin(θ/2) * B̂  where B̂ is a unit bivector.
-
-    bivector: (..., 3) — coefficients for [e12, e13, e23]
-    angle:    (...,)   — rotation angle in radians
-
-    Returns: (..., 8) multivector rotor
     """
     # Normalize bivector
     bv_norm = bivector.norm(dim=-1, keepdim=True).clamp(min=1e-8)
@@ -137,6 +135,13 @@ def rotor_sandwich(rotor: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
     Apply rotor sandwich product: R x R̃
     This rotates x while preserving all algebraic structure.
     """
+    # Ensure rotor is expanded if compact
+    if rotor.size(-1) == 4:
+        r_full = torch.zeros(*rotor.shape[:-1], 8, dtype=rotor.dtype, device=rotor.device)
+        r_full[..., 0] = rotor[..., 0]
+        r_full[..., 4:7] = rotor[..., 1:4]
+        rotor = r_full
+    
     rotor_rev = reverse(rotor)
     return geometric_product(geometric_product(rotor, x), rotor_rev)
 
