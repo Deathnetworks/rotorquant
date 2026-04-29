@@ -53,18 +53,21 @@ def _compact_rotors(rotors):
         raise ValueError(f"Unexpected rotor shape: {rotors.shape}")
 
 def rotor_full_fused(input, rotors, c_scalar, c_vector, c_bivector, c_trivector):
-    dtype = input.dtype
-    dispatch = {
-        torch.float32: 'rotor_full_fused_float',
-        torch.float16: 'rotor_full_fused_half',
-        torch.bfloat16: 'rotor_full_fused_bf16',
-    }
-    fn_name = dispatch.get(dtype)
-    if fn_name is None:
-        raise TypeError(f"Unsupported dtype: {dtype}")
-    compact = _compact_rotors(rotors)
+    """Fused kernel quantizing all grades."""
+    fn_name = "rotor_full_fused_half" if input.dtype == torch.half else "rotor_full_fused_bf16"
     return getattr(xpu_rotor_fused, fn_name)(
-        input.contiguous(), compact,
+        input.contiguous(), rotors.contiguous(),
+        c_scalar.contiguous(), c_scalar.size(0),
+        c_vector.contiguous(), c_vector.size(0),
+        c_bivector.contiguous(), c_bivector.size(0),
+        c_trivector.contiguous(), c_trivector.size(0)
+    )
+
+def rotor_compress(input, rotors, c_scalar, c_vector, c_bivector, c_trivector):
+    """Fused compress-only kernel."""
+    fn_name = "rotor_compress_half" if input.dtype == torch.half else "rotor_compress_bf16"
+    return getattr(xpu_rotor_fused, fn_name)(
+        input.contiguous(), rotors.contiguous(),
         c_scalar.contiguous(), c_scalar.size(0),
         c_vector.contiguous(), c_vector.size(0),
         c_bivector.contiguous(), c_bivector.size(0),
@@ -97,7 +100,7 @@ def rotor_inverse(input_mv, rotors, emb_dim):
     compact = _compact_rotors(rotors)
     return getattr(xpu_rotor_fused, fn_name)(input_mv.contiguous(), compact, emb_dim)
 
-def rotor_roundtrip(input, rotors):
+def rotor_sandwich_roundtrip(input, rotors):
     """Fused sandwich roundtrip: forward + inverse in ONE kernel launch.
     
     Input: (batch, emb_dim) -> Output: (batch, emb_dim)
@@ -105,9 +108,8 @@ def rotor_roundtrip(input, rotors):
     """
     dtype = input.dtype
     dispatch = {
-        torch.float32: 'rotor_roundtrip_float',
-        torch.float16: 'rotor_roundtrip_half',
-        torch.bfloat16: 'rotor_roundtrip_bf16',
+        torch.float16: 'rotor_sandwich_roundtrip_half',
+        torch.bfloat16: 'rotor_sandwich_roundtrip_bf16',
     }
     fn_name = dispatch.get(dtype)
     if fn_name is None:
@@ -123,7 +125,6 @@ def rotor_fused_vec(input, rotors, c_vector, c_trivector):
     """
     dtype = input.dtype
     dispatch = {
-        torch.float32: 'rotor_fused_vec_float',
         torch.float16: 'rotor_fused_vec_half',
         torch.bfloat16: 'rotor_fused_vec_bf16',
     }
@@ -136,6 +137,18 @@ def rotor_fused_vec(input, rotors, c_vector, c_trivector):
         c_vector.contiguous(), c_vector.size(0),
         c_trivector.contiguous(), c_trivector.size(0)
     )
+
+def rotor_sandwich_inverse(input_mv, rotors, emb_dim):
+    dtype = input_mv.dtype
+    dispatch = {
+        torch.float16: 'rotor_inverse_sandwich_half',
+        torch.bfloat16: 'rotor_inverse_sandwich_bf16',
+    }
+    fn_name = dispatch.get(dtype)
+    if fn_name is None:
+        raise TypeError(f"Unsupported dtype: {dtype}")
+    compact = _compact_rotors(rotors)
+    return getattr(xpu_rotor_fused, fn_name)(input_mv.contiguous(), compact, emb_dim)
 
 # ─── QJL XPU kernel wrappers ───────────────────────────────────────
 

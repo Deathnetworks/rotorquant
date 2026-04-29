@@ -23,6 +23,11 @@ QWEN36_NUM_KV_HEADS = 2
 QWEN36_FULL_ATTN_LAYERS = 10  # layers 3,7,11,...,39
 QWEN36_DTYPE = torch.bfloat16
 
+def make_full_rotors(n_groups, device):
+    """Create normalized random rotors."""
+    r = torch.randn(n_groups, 4, device=device, dtype=torch.float32)
+    return r / torch.norm(r, dim=-1, keepdim=True)
+
 # Test sequence lengths
 SEQ_LENGTHS_PREFILL = [1024, 4096, 16384]
 SEQ_LENGTHS_FULL = [1024, 4096, 16384, 65536, 131072]
@@ -69,6 +74,42 @@ def q8_reference_error(x):
     max_err = (x.float() - dequant.float()).abs().max().item()
     parity = (x == dequant).sum().item() / x.numel() * 100
     return {'mse': mse, 'max_err': max_err, 'parity_pct': parity}
+
+
+def fit_lloyd_max(x, n_levels, iters=10):
+    """Simple 1D Lloyd-Max (K-means) quantization fitting."""
+    if n_levels <= 0: return torch.zeros(0, device=x.device)
+    
+    # Initialize with percentiles to cover distribution
+    x_flat = x.float().flatten()
+    if x_flat.numel() == 0: return torch.zeros(n_levels, device=x.device)
+    
+    # Use percentiles for robust initialization
+    indices = torch.linspace(0.001, 0.999, n_levels, device=x.device)
+    centroids = torch.quantile(x_flat, indices)
+    
+    for _ in range(iters):
+        # Assignment: find nearest centroid for each point
+        # For 1D, we can just find boundaries between centroids
+        boundaries = (centroids[:-1] + centroids[1:]) / 2.0
+        
+        # Update centroids: mean of points in each bucket
+        new_centroids = torch.zeros_like(centroids)
+        for i in range(n_levels):
+            mask = torch.ones_like(x_flat, dtype=torch.bool)
+            if i > 0:
+                mask &= (x_flat >= boundaries[i-1])
+            if i < n_levels - 1:
+                mask &= (x_flat < boundaries[i])
+            
+            if mask.any():
+                new_centroids[i] = x_flat[mask].mean()
+            else:
+                new_centroids[i] = centroids[i] # Keep old if no points
+        centroids = new_centroids
+        centroids, _ = torch.sort(centroids)
+        
+    return centroids.to(x.device)
 
 
 # ─── Test 1: Parity ─────────────────────────────────────────────────────
@@ -153,12 +194,12 @@ def test_quantized_parity(device, head_dim=256, seq_len=4096, dtype=torch.bfloat
     ).item()
     q8_ref = q8_reference_error(x)
 
-    # Storage: with N-bit quantization
+    # Storage: with 8-bit quantized norms (1 byte per norm)
     import math as _math
-    bits_per_level = _math.ceil(_math.log2(n_levels))  # e.g. 16 levels = 4 bits
-    # Per token: n_groups * 8 indices * bits_per_level bits + per-group norms
+    bits_per_level = _math.ceil(_math.log2(n_levels))
+    # Per token: n_groups * 8 indices * bits_per_level bits + per-group 8-bit norms
     index_bits_per_token = n_groups * 8 * bits_per_level
-    norm_bytes_per_token = n_groups * 4 * 2  # 4 grade norms, FP16 each
+    norm_bytes_per_token = n_groups * 4 * 1  # 4 grade norms, 8-bit each
     total_compressed_per_token = index_bits_per_token / 8 + norm_bytes_per_token
     original_per_token = head_dim * (2 if dtype != torch.float32 else 4)
     compression_ratio = original_per_token / total_compressed_per_token
@@ -168,6 +209,73 @@ def test_quantized_parity(device, head_dim=256, seq_len=4096, dtype=torch.bfloat
         'seq_len': seq_len,
         'n_levels': n_levels,
         'bits_per_level': bits_per_level,
+        'parity_pct': exact / total * 100,
+        'mse': mse,
+        'max_err': max_err,
+        'cos_sim': cos_sim,
+        'better_than_q8': mse <= q8_ref['mse'],
+        'q8_mse': q8_ref['mse'],
+        'original_bytes_per_tok': original_per_token,
+        'compressed_bytes_per_tok': total_compressed_per_token,
+        'compression_ratio': compression_ratio,
+    }
+
+
+def test_vec_quantized_parity(device, head_dim=128, seq_len=1024, dtype=torch.bfloat16, n_levels=16):
+    """
+    Tests the actual XPU fused kernel parity.
+    Targets ~3.0x compression with maximum parity.
+    """
+    x = torch.randn(seq_len, head_dim, device=device, dtype=dtype)
+    n_groups = (head_dim + 2) // 3
+    rotors = make_full_rotors(n_groups, device)
+    
+    # 1. Calibration: Fit 3D codebook to actual data distribution
+    with torch.no_grad():
+        # Sample some data for calibration
+        x_calib = torch.randn(1024, head_dim, device=device, dtype=dtype)
+        mv_calib = xpu_backend.rotor_sandwich(x_calib, rotors)
+        rotated_calib = mv_calib[..., 1:4].float()
+        
+        # In the kernel, we normalize by block_max
+        v_max = rotated_calib.abs().max().item()
+        if v_max < 1e-9: v_max = 1.0
+        
+        norm_samples = (rotated_calib / v_max).reshape(-1, 3).cpu()
+        from sklearn.cluster import KMeans
+        kmeans = KMeans(n_clusters=n_levels, n_init=1, max_iter=20).fit(norm_samples.numpy())
+        c_vector = torch.from_numpy(kmeans.cluster_centers_).to(device).float().reshape(-1)
+        # Note: c_vector is now (n_levels * 3)
+        
+    c_trivector = torch.zeros(1, device=device, dtype=torch.float32)
+
+    # 2. Call the actual Fused XPU Kernel
+    # n_clusters for the kernel is n_vector / 3 (since c_vector is flat)
+    with torch.no_grad():
+        x_recon = xpu_backend.rotor_fused_vec(x, rotors, c_vector, c_trivector)
+
+    # 3. Metrics
+    total = x.numel()
+    exact = (x == x_recon).sum().item()
+    mse = ((x.float() - x_recon.float()) ** 2).mean().item()
+    max_err = (x.float() - x_recon.float()).abs().max().item()
+    cos_sim = torch.nn.functional.cosine_similarity(
+        x.float().reshape(1, -1), x_recon.float().reshape(1, -1)
+    ).item()
+    q8_ref = q8_reference_error(x)
+
+    # Storage: VQ-N (log2(n_levels) bits/group of 3) + 8-bit scale/group
+    bits_per_val = math.log2(n_levels) / 3.0
+    total_bits = n_groups * math.log2(n_levels) + (8.0 / 32.0) * n_groups
+    total_compressed_per_token = total_bits / 8
+    original_per_token = head_dim * (2 if dtype != torch.float32 else 4)
+    compression_ratio = original_per_token / total_compressed_per_token
+
+    return {
+        'dtype': str(dtype).split('.')[-1],
+        'seq_len': seq_len,
+        'n_levels': n_levels,
+        'bits_per_level': bits_per_val,
         'parity_pct': exact / total * 100,
         'mse': mse,
         'max_err': max_err,
@@ -221,6 +329,9 @@ def test_prefill(device, head_dim=256, dtype=torch.bfloat16):
     n_groups = (head_dim + 2) // 3
     rotors = make_full_rotors(n_groups, device)
     results = []
+    # Calibration for prefill (VQ-16)
+    c_vector = torch.randn(16 * 3, device=device, dtype=torch.float32)
+    c_trivector = torch.zeros(1, device=device, dtype=torch.float32)
 
     for seq_len in SEQ_LENGTHS_PREFILL:
         try:
@@ -237,7 +348,7 @@ def test_prefill(device, head_dim=256, dtype=torch.bfloat16):
             torch.xpu.synchronize()
             t0 = time.perf_counter()
             for _ in range(iters):
-                x_recon = xpu_backend.rotor_roundtrip(x, rotors)
+                x_recon = xpu_backend.rotor_fused_vec(x, rotors, c_vector, c_trivector)
             torch.xpu.synchronize()
             t_rt = (time.perf_counter() - t0) / iters * 1000
 
@@ -379,6 +490,24 @@ def run_all(device):
                   f"({r['compressed_bytes_per_tok']:.0f} vs {r['original_bytes_per_tok']} B/tok)")
             quant_results.append(r)
     all_results['quantized_parity'] = quant_results
+
+    # ─── Test 1c: Vec-Only Quantized Parity ───
+    print()
+    print("=" * 76)
+    print("TEST 1c: Vec-Only Quantized Fused Pipeline (4 grades)")
+    print("=" * 76)
+
+    vec_quant_results = []
+    for n_levels in [4, 8, 16, 32, 64, 256]: # Added 2-bit (4 levels)
+        for dtype in [torch.bfloat16]:
+            r = test_vec_quantized_parity(device, head_dim=256, seq_len=4096, dtype=dtype, n_levels=n_levels)
+            verdict = "PASS" if r['better_than_q8'] else "FAIL"
+            bits = r['bits_per_level']
+            print(f"  {bits}-bit ({n_levels} lvl): [{verdict}]  MSE={r['mse']:.2e} (Q8={r['q8_mse']:.2e})  "
+                  f"CosSim={r['cos_sim']:.8f}  Compress={r['compression_ratio']:.2f}x  "
+                  f"({r['compressed_bytes_per_tok']:.0f} vs {r['original_bytes_per_tok']} B/tok)")
+            vec_quant_results.append(r)
+    all_results['vec_quantized_parity'] = vec_quant_results
 
     # ─── Test 2: Storage ───
     print()

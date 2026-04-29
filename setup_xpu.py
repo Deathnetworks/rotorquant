@@ -99,6 +99,14 @@ try:
             extra_compile_args={"cxx": sycl_flags()},
             extra_link_args=["-fsycl"]
         ),
+        SyclExtension(
+            name='turboquant.xpu_iso_planar',
+            sources=[os.path.join(csrc_dir, 'iso_planar_kernels_xpu.cpp')],
+            include_dirs=[],
+            library_dirs=[torch_lib_path, sycl_lib_path],
+            extra_compile_args={"cxx": sycl_flags()},
+            extra_link_args=["-fsycl", f"/LIBPATH:{sycl_lib_path}"]
+        ),
     ]
     class XPUBuildExtension(BuildExtension):
         def build_extensions(self):

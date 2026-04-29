@@ -1,0 +1,100 @@
+﻿D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp(121,13): note: in instantiation of 
+function template specialization 'sycl::handler::parallel_for<sycl::detail::auto_name, 3, (lambda at D:\User 
+Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp:121:142)>' requested here
+  121 |         cgh.parallel_for(sycl::nd_range<3>(sycl::range<3>(1, 1, batch_size) * sycl::range<3>(1, 1, threads), 
+sycl::range<3>(1, 1, threads)), [=](sycl::nd_item<3> item) [[sycl::reqd_sub_group_size(32)]] {
+      |             ^
+D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp(253,35): note: in instantiation of 
+function template specialization 'rotor_compress_impl<c10::Half>' requested here
+  253 |     m.def("rotor_compress_half", &rotor_compress_impl<c10::Half>);
+      |                                   ^
+C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\handler.hpp(2131,28): note: 'parallel_for' has been 
+explicitly marked deprecated here
+ 2131 |       PropertiesT>::value> parallel_for(nd_range<Dims> Range,
+      |                            ^
+C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\handler.hpp(2259,5): warning: 
+'parallel_for<sycl::detail::auto_name, (lambda at D:\User 
+Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp:121:142), 
+sycl::ext::oneapi::experimental::properties<detail::properties_type_list<>>, 3>' is deprecated: To specify properties, 
+use a launch configuration object of type launch_config or a kernel functor with a 
+get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+ 2259 |     parallel_for<KernelName>(Range,
+      |     ^
+C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\handler.hpp(2126,3): note: 
+'parallel_for<sycl::detail::auto_name, (lambda at D:\User 
+Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp:121:142), 
+sycl::ext::oneapi::experimental::properties<detail::properties_type_list<>>, 3>' has been explicitly marked deprecated 
+here
+ 2126 |   __SYCL_DEPRECATED("To specify properties, use a launch configuration object "
+      |   ^
+C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\detail\defines_elementary.hpp(53,38): note: expanded 
+from macro '__SYCL_DEPRECATED'
+   53 | #define __SYCL_DEPRECATED(message) [[deprecated(message)]]
+      |                                      ^
+In file included from D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp:1:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\torch\extension.h:6:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\torch\csrc\api\include\torch\all.h:8:
+In file included from c:\program 
+files\python311\Lib\site-packages\torch\include\torch\csrc\api\include\torch\autograd.h:4:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\torch\csrc\autograd\autograd.h:4:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\torch\csrc\autograd\variable.h:7:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\torch\csrc\autograd\cpp_hook.h:3:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\torch\csrc\autograd\function_hook.h:4:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\ATen\Tensor.h:4:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\ATen\core\Tensor.h:4:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\ATen\core\TensorBody.h:17:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\c10\core\Scalar.h:10:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\c10\core\ScalarType.h:4:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\c10\util\BFloat16.h:2:
+In file included from c:\program files\python311\Lib\site-packages\torch\include\torch\headeronly\util\BFloat16.h:22:
+In file included from C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\sycl.hpp:49:
+In file included from C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\detail\core.hpp:23:
+In file included from C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\queue.hpp:36:
+C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\handler.hpp(2259,5): warning: 'parallel_for' is 
+deprecated: To specify properties, use a launch configuration object of type launch_config or a kernel functor with a 
+get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+ 2259 |     parallel_for<KernelName>(Range,
+      |     ^
+D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp(121,13): note: in instantiation of 
+function template specialization 'sycl::handler::parallel_for<sycl::detail::auto_name, 3, (lambda at D:\User 
+Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp:121:142)>' requested here
+  121 |         cgh.parallel_for(sycl::nd_range<3>(sycl::range<3>(1, 1, batch_size) * sycl::range<3>(1, 1, threads), 
+sycl::range<3>(1, 1, threads)), [=](sycl::nd_item<3> item) [[sycl::reqd_sub_group_size(32)]] {
+      |             ^
+D:\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp(254,35): note: in instantiation of 
+function template specialization 'rotor_compress_impl<c10::BFloat16>' requested here
+  254 |     m.def("rotor_compress_bf16", &rotor_compress_impl<at::BFloat16>);
+      |                                   ^
+C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\handler.hpp(2131,28): note: 'parallel_for' has been 
+explicitly marked deprecated here
+ 2131 |       PropertiesT>::value> parallel_for(nd_range<Dims> Range,
+      |                            ^
+C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\handler.hpp(2259,5): warning: 
+'parallel_for<sycl::detail::auto_name, (lambda at D:\User 
+Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp:121:142), 
+sycl::ext::oneapi::experimental::properties<detail::properties_type_list<>>, 3>' is deprecated: To specify properties, 
+use a launch configuration object of type launch_config or a kernel functor with a 
+get(sycl::ext::oneapi::experimental::properties_tag) member function instead. [-Wdeprecated-declarations]
+ 2259 |     parallel_for<KernelName>(Range,
+      |     ^
+C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\handler.hpp(2126,3): note: 
+'parallel_for<sycl::detail::auto_name, (lambda at D:\User 
+Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.cpp:121:142), 
+sycl::ext::oneapi::experimental::properties<detail::properties_type_list<>>, 3>' has been explicitly marked deprecated 
+here
+ 2126 |   __SYCL_DEPRECATED("To specify properties, use a launch configuration object "
+      |   ^
+C:\Program Files (x86)\Intel\oneAPI\compiler\2025.3\include\sycl\detail\defines_elementary.hpp(53,38): note: expanded 
+from macro '__SYCL_DEPRECATED'
+   53 | #define __SYCL_DEPRECATED(message) [[deprecated(message)]]
+      |                                      ^
+164 warnings generated.
+RUNNING: icx -fsycl build\temp.win-amd64-cpython-311\Release\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.obj /link /nologo /INCREMENTAL:NO /LTCG /DLL /MANIFEST:EMBED,ID=2 /MANIFESTUAC:NO /LIBPATH:c:\program files\python311\Lib\site-packages\torch\lib /LIBPATH:C:\Program Files (x86)\Intel\oneAPI\compiler\latest\lib /LIBPATH:c:\program files\python311\Lib\site-packages\torch\lib /LIBPATH:c:\program files\python311\libs /LIBPATH:c:\program files\python311 /LIBPATH:c:\program files\python311\PCbuild\amd64 /LIBPATH:C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\ATLMFC\lib\x64 /LIBPATH:C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\lib\x64 /LIBPATH:C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\lib\um\x64 /LIBPATH:C:\Program Files (x86)\Windows Kits\10\lib\10.0.26100.0\ucrt\x64 /LIBPATH:C:\Program Files (x86)\Windows Kits\10\\lib\10.0.26100.0\\um\x64 c10.lib c10_xpu.lib torch.lib torch_cpu.lib sycl.lib torch_python.lib torch_xpu.lib /OUT:build\lib.win-amd64-cpython-311\turboquant\xpu_rotor_fused.cp311-win_amd64.pyd /IMPLIB:build\temp.win-amd64-cpython-311\Release\User Files\Desktop\RotorQuant\turboquant\csrc\xpu_rotor_fused.cp311-win_amd64.lib /LIBPATH:C:\Program Files (x86)\Intel\oneAPI\compiler\latest\lib
+icx -fsycl "build\temp.win-amd64-cpython-311\Release\User Files\Desktop\RotorQuant\turboquant\csrc\rotor_fused_kernel_xpu.obj" /link /nologo /INCREMENTAL:NO /LTCG /DLL /MANIFEST:EMBED,ID=2 /MANIFESTUAC:NO "/LIBPATH:c:\program files\python311\Lib\site-packages\torch\lib" "/LIBPATH:C:\Program Files (x86)\Intel\oneAPI\compiler\latest\lib" "/LIBPATH:c:\program files\python311\Lib\site-packages\torch\lib" "/LIBPATH:c:\program files\python311\libs" "/LIBPATH:c:\program files\python311" "/LIBPATH:c:\program files\python311\PCbuild\amd64" "/LIBPATH:C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\ATLMFC\lib\x64" "/LIBPATH:C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\lib\x64" "/LIBPATH:C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8\lib\um\x64" "/LIBPATH:C:\Program Files (x86)\Windows Kits\10\lib\10.0.26100.0\ucrt\x64" "/LIBPATH:C:\Program Files (x86)\Windows Kits\10\\lib\10.0.26100.0\\um\x64" c10.lib c10_xpu.lib torch.lib torch_cpu.lib sycl.lib torch_python.lib torch_xpu.lib /OUT:build\lib.win-amd64-cpython-311\turboquant\xpu_rotor_fused.cp311-win_amd64.pyd "/IMPLIB:build\temp.win-amd64-cpython-311\Release\User Files\Desktop\RotorQuant\turboquant\csrc\xpu_rotor_fused.cp311-win_amd64.lib" "/LIBPATH:C:\Program Files (x86)\Intel\oneAPI\compiler\latest\lib"
+   Creating library build\temp.win-amd64-cpython-311\Release\User Files\Desktop\RotorQuant\turboquant\csrc\xpu_rotor_fused.cp311-win_amd64.lib and object build\temp.win-amd64-cpython-311\Release\User Files\Desktop\RotorQuant\turboquant\csrc\xpu_rotor_fused.cp311-win_amd64.exp
+LINK : /LTCG specified but no code generation required; remove /LTCG from the link command line to improve linker performance
+copying build\lib.win-amd64-cpython-311\turboquant\xpu_rotor_fused.cp311-win_amd64.pyd -> turboquant
+copying build\lib.win-amd64-cpython-311\turboquant\xpu_qjl_score.cp311-win_amd64.pyd -> turboquant
+copying build\lib.win-amd64-cpython-311\turboquant\xpu_qjl_quant.cp311-win_amd64.pyd -> turboquant
+copying build\lib.win-amd64-cpython-311\turboquant\xpu_qjl_gqa_score.cp311-win_amd64.pyd -> turboquant
+copying build\lib.win-amd64-cpython-311\turboquant\xpu_quantization.cp311-win_amd64.pyd -> turboquant
