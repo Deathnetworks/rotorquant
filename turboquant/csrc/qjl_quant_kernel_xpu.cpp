@@ -1,194 +1,163 @@
 #include <torch/extension.h>
 #include <sycl/sycl.hpp>
 #include <c10/xpu/XPUStream.h>
-#include <cmath>
 
-template <typename T> inline float convert_to_float(T value) { return (float)value; }
-template <> inline float convert_to_float<c10::Half>(c10::Half value) { return (float)value; }
-template <> inline float convert_to_float<float>(float value) { return value; }
-template <> inline float convert_to_float<at::BFloat16>(at::BFloat16 value) { return (float)value; }
-
-template <typename T> inline T convert_from_float(float value) { return (T)value; }
-template <> inline c10::Half convert_from_float<c10::Half>(float value) { return (c10::Half)value; }
-template <> inline float convert_from_float<float>(float value) { return value; }
-template <> inline at::BFloat16 convert_from_float<at::BFloat16>(float value) { return (at::BFloat16)value; }
-
-#define WARP_SIZE 32
-#define WARPS_PER_BLOCK 32
-#define EMB_DIM 128
-
-template <typename T, typename Tproj>
-[[intel::reqd_sub_group_size(32)]]
-void quantize_with_outliers_kernel(
-    T *key_states, uint8_t *key_quant, uint8_t *key_outlier_quant,
-    const uint8_t *outlier_indices, const Tproj *rand_prj, T *outlier_norms,
-    int batch_size, int head_size, int n_size, int group_size, int sketch_dim,
-    int outlier_sketch_dim, int emb_dim, int outlier_counts,
-    uint8_t *shared_mask, float *shared_keys,
-    float *shared_outlier_norms,
-    uint8_t *shared_key_quant,
-    uint8_t *shared_key_outlier_quant) {
-
-    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+// Amortized Fused Sparse Outlier and Packing Kernel V5 (64-bit mask checks)
+void compute_qjl_fused_multi_row_v5_kernel(
+    const sycl::half* __restrict__ key_states,
+    const uint8_t* __restrict__ outlier_indices,
+    const sycl::half* __restrict__ rand_prj,
+    const sycl::half* __restrict__ total_results,
+    uint8_t* __restrict__ key_quant,
+    uint8_t* __restrict__ key_outlier_quant,
+    sycl::half* __restrict__ outlier_norms,
+    int total_rows,
+    int sketch_dim,
+    int emb_dim,
+    int outlier_counts,
+    sycl::half* shared_proj // [128][128]
+) {
+    auto item_ct1 = sycl::ext::oneapi::this_work_item::get_nd_item<1>();
     auto sg = item_ct1.get_sub_group();
+    int lid = item_ct1.get_local_id(0);
+    int gid = item_ct1.get_group(0);
+    int sg_lid = sg.get_local_id()[0];
+    int sg_id = lid / 32;
     
-    // Original CUDA dims: grid(batch*head*n, blocksPerGroup, sketch_dim/32), block(32, 32)
-    size_t bhn = item_ct1.get_group(0);
-    size_t gIdx_block = item_ct1.get_group(1);
-    size_t pIdx_block = item_ct1.get_group(2);
+    int start_row = gid * 128;
+    int num_rows_in_block = sycl::min(128, total_rows - start_row);
+
+    // 1. Load proj into SLM
+    for (int i = 0; i < 128; i++) {
+        shared_proj[i * 128 + lid] = rand_prj[lid * 128 + i];
+    }
     
-    size_t threadLane = sg.get_local_id()[0]; // 0..31 (lane in warp)
-    size_t wIdx = item_ct1.get_local_id(1);    // 0..31 (warp in block)
-    
-    size_t gIdx = gIdx_block * 32 + threadLane;
-    size_t pIdx = pIdx_block * 32 + wIdx;
-
-    int hash_dim = sketch_dim/8;
-    int outlier_hash_dim = outlier_sketch_dim/8;
-
-    int base_index_key_quant = (bhn * group_size * hash_dim) + (gIdx * hash_dim);
-    int base_index_outlier_quant = (bhn * group_size * outlier_hash_dim) + (gIdx * outlier_hash_dim);
-
-    int base_index_outlier_indices = bhn * outlier_counts;
-    const uint8_t* outlier_ind = outlier_indices + base_index_outlier_indices;
-
-    int base_index_key = (bhn * group_size * emb_dim) + (gIdx_block * 32 * emb_dim);
-    T* key_base = key_states + base_index_key;
-
-    size_t base_index_rand_prj = (size_t)pIdx * emb_dim;
-    const Tproj* sketch = rand_prj + base_index_rand_prj;
-
-    size_t base_index_outlier_norm = (size_t)(bhn * group_size) + gIdx;
-    T* key_outlier_norm = outlier_norms + base_index_outlier_norm;
-
-    size_t tIdx = wIdx * 32 + threadLane;
-    if (tIdx < (size_t)emb_dim) {
-        shared_mask[tIdx] = 0;
-    }
-    if (wIdx == 0) {
-        shared_outlier_norms[threadLane] = 0.0f;
-    }
-    item_ct1.barrier(sycl::access::fence_space::local_space);
-
-    if (tIdx < (size_t)outlier_counts) {
-        shared_mask[outlier_ind[tIdx]] = 1;
-    }
-    item_ct1.barrier(sycl::access::fence_space::local_space);
-
-    for (size_t chnl_idx{wIdx}; chnl_idx < (size_t)emb_dim; chnl_idx += 32) {
-        shared_keys[chnl_idx * 32 + threadLane] = convert_to_float<T>(key_base[threadLane * (size_t)emb_dim + chnl_idx]);
-    }
-    item_ct1.barrier(sycl::access::fence_space::local_space);
-
-    float sketched_keys = 0.0f;
-    float sketched_outliers = 0.0f;
-
-    for (size_t chnl_idx{0}; chnl_idx < (size_t)emb_dim; chnl_idx++) {
-        float key_val = shared_keys[chnl_idx * 32 + threadLane];
-        float sketch_val = convert_to_float<Tproj>(sketch[chnl_idx]);
-        if (shared_mask[chnl_idx] == 0) {
-            sketched_keys += key_val * sketch_val;
+    // 2. Load 4 masks using 64-bit loads
+    uint64_t mask_u64[4][2];
+    bool block_has_outliers = false;
+    for (int m_idx = 0; m_idx < 4; m_idx++) {
+        int bhn = (start_row / 32) + m_idx;
+        if (bhn * 32 < total_rows) {
+            const uint64_t* m_ptr = (const uint64_t*)(outlier_indices + (bhn * outlier_counts));
+            mask_u64[m_idx][0] = m_ptr[0];
+            mask_u64[m_idx][1] = m_ptr[1];
+            if (mask_u64[m_idx][0] != 0 || mask_u64[m_idx][1] != 0) block_has_outliers = true;
         } else {
-            sketched_outliers += key_val * sketch_val;
+            mask_u64[m_idx][0] = 0;
+            mask_u64[m_idx][1] = 0;
         }
     }
 
-    shared_key_quant[threadLane * 32 + wIdx] = (1 << (wIdx % 8));
-    shared_key_outlier_quant[threadLane * 32 + wIdx] = (1 << (wIdx % 8));
     item_ct1.barrier(sycl::access::fence_space::local_space);
 
-    if (gIdx >= group_size) return;
+    // 3. Main Loop
+    for (int r = 0; r < num_rows_in_block; r++) {
+        int row_idx = start_row + r;
+        float out_sum = 0.0f;
+        
+        if (block_has_outliers) {
+            int m_idx = r / 32;
+            if (mask_u64[m_idx][0] != 0 || mask_u64[m_idx][1] != 0) {
+                const uint8_t* local_mask = (const uint8_t*)&mask_u64[m_idx][0];
+                
+                // Norm
+                if (lid == 0) {
+                    float norm_sum = 0.0f;
+                    for (int c_byte = 0; c_byte < 16; c_byte++) {
+                        uint8_t m = local_mask[c_byte];
+                        if (m == 0) continue;
+                        for (int i = 0; i < 8; i++) {
+                            if ((m >> i) & 1) {
+                                float val = (float)key_states[row_idx * emb_dim + c_byte * 8 + i];
+                                norm_sum += val * val;
+                            }
+                        }
+                    }
+                    outlier_norms[row_idx] = (sycl::half)std::sqrt(norm_sum);
+                }
 
-    if ((wIdx % 8) == 0) {
-        uint8_t hashed_key = 0;
-#pragma unroll
-        for (int shift = 0; shift < 8; shift++) {
-            hashed_key += shared_key_quant[threadLane * 32 + (wIdx + shift)];
-        }
-        key_quant[base_index_key_quant + pIdx / 8] = hashed_key;
-
-        if (pIdx < (size_t)outlier_sketch_dim) {
-            uint8_t hashed_outlier = 0;
-#pragma unroll
-            for (int shift = 0; shift < 8; shift++) {
-                hashed_outlier += shared_key_outlier_quant[threadLane * 32 + (wIdx + shift)];
+                // Sparse Projection
+                for (int c_byte = 0; c_byte < 16; c_byte++) {
+                    uint8_t m = local_mask[c_byte];
+                    if (m == 0) continue;
+                    uint8_t temp_m = m;
+                    while (temp_m > 0) {
+                        int i = sycl::ctz((uint16_t)temp_m);
+                        int c = c_byte * 8 + i;
+                        out_sum += (float)key_states[row_idx * emb_dim + c] * (float)shared_proj[c * 128 + lid];
+                        temp_m &= ~(1 << i);
+                    }
+                }
+            } else {
+                if (lid == 0) outlier_norms[row_idx] = 0.0f;
             }
-            key_outlier_quant[base_index_outlier_quant + pIdx / 8] = hashed_outlier;
+        } else {
+            if (lid == 0) outlier_norms[row_idx] = 0.0f;
+        }
+
+        // Packing
+        float total = (float)total_results[row_idx * sketch_dim + lid];
+        bool in_bit = (total - out_sum) > 0.0f;
+        bool out_bit = out_sum > 0.0f;
+
+        auto in_mask = sycl::ext::oneapi::group_ballot(sg, in_bit);
+        auto out_mask = sycl::ext::oneapi::group_ballot(sg, out_bit);
+
+        if (sg_lid == 0) {
+            uint32_t in_val;
+            in_mask.extract_bits(in_val);
+            uint32_t out_val;
+            out_mask.extract_bits(out_val);
+            int out_offset = row_idx * (sketch_dim / 8) + (sg_id * 4);
+            *(uint32_t*)(key_quant + out_offset) = in_val;
+            *(uint32_t*)(key_outlier_quant + out_offset) = out_val;
         }
     }
- 
-    
-    if (wIdx == 0 && pIdx_block == 0) {
-        float outlier_norm_sum = 0.0;
-        for (size_t chnl_idx{0}; chnl_idx < (size_t)emb_dim; chnl_idx++) {
-            if (shared_mask[chnl_idx] != 0) {
-                float val = shared_keys[chnl_idx * 32 + threadLane];
-                outlier_norm_sum += val * val;
-            }
-        }
-        key_outlier_norm[0] = convert_from_float<T>(sycl::sqrt(outlier_norm_sum));
-    }
-}
-
-template <typename T, typename Tproj>
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> QJLQuantCudaTemplate(
-    torch::Tensor key_states,
-    torch::Tensor outlier_indices,
-    torch::Tensor rand_prj,
-    int outlier_sketch_dim) {
-
-    int batch = key_states.size(0);
-    int head = key_states.size(1);
-    int n = key_states.size(2);
-    int group_size = key_states.size(3);
-    int emb_dim = key_states.size(4);
-    int sketch_dim = rand_prj.size(0);
-    int hash_dim = sketch_dim / 8;
-    int outlier_hash_dim = outlier_sketch_dim / 8;
-    int outlier_counts = outlier_indices.size(-1);
-
-    auto options = torch::TensorOptions().device(torch::kXPU, 0).dtype(torch::kUInt8);
-    auto key_quant = torch::zeros({batch, head, n, group_size, hash_dim}, options).contiguous();
-    auto key_outlier_quant = torch::zeros({batch, head, n, group_size, outlier_hash_dim}, options).contiguous();
-    auto outlier_norms = torch::zeros({batch, head, n, group_size}, key_states.options()).contiguous();
-
-    int blocksPerGroup = (group_size + 31) / 32;
-    int numProjBlocks = sketch_dim / 32;
-    sycl::range<3> numBlocks(batch * head * n, blocksPerGroup, numProjBlocks);
-    sycl::range<3> threadsPerBlockDim(32, 32, 1);
-
-    auto key_states_ptr = key_states.data_ptr<T>();
-    auto outlier_norms_ptr = outlier_norms.data_ptr<T>();
-    auto rand_prj_ptr = rand_prj.data_ptr<Tproj>();
-
-    c10::xpu::getCurrentXPUStream().queue().submit([&](sycl::handler &cgh) {
-        sycl::local_accessor<uint8_t, 1> shared_mask_acc(sycl::range<1>(128), cgh);
-        sycl::local_accessor<float, 1> shared_keys_acc(sycl::range<1>(128 * 32), cgh);
-        sycl::local_accessor<float, 1> shared_outlier_norms_acc(sycl::range<1>(32), cgh);
-        sycl::local_accessor<uint8_t, 1> shared_key_quant_acc(sycl::range<1>(32 * 32), cgh);
-        sycl::local_accessor<uint8_t, 1> shared_key_outlier_quant_acc(sycl::range<1>(32 * 32), cgh);
-
-        auto k_quant_ptr = key_quant.data_ptr<uint8_t>();
-        auto ko_quant_ptr = key_outlier_quant.data_ptr<uint8_t>();
-        auto o_indices_ptr = outlier_indices.data_ptr<uint8_t>();
-
-        cgh.parallel_for(sycl::nd_range<3>(numBlocks * threadsPerBlockDim, threadsPerBlockDim), 
-            [=](sycl::nd_item<3> item_ct1) [[sycl::reqd_sub_group_size(32)]] {
-            quantize_with_outliers_kernel(
-                key_states_ptr, k_quant_ptr, ko_quant_ptr, o_indices_ptr, rand_prj_ptr, outlier_norms_ptr,
-                batch, head, n, group_size, sketch_dim, outlier_sketch_dim, emb_dim, outlier_counts,
-                shared_mask_acc.get_pointer(), (float*)shared_keys_acc.get_pointer(), shared_outlier_norms_acc.get_pointer(),
-                (uint8_t*)shared_key_quant_acc.get_pointer(), (uint8_t*)shared_key_outlier_quant_acc.get_pointer());
-        });
-    });
-
-    return std::make_tuple(key_quant, key_outlier_quant, outlier_norms);
 }
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-    m.def("qjl_quant_xpu_half_half", &QJLQuantCudaTemplate<c10::Half, c10::Half>);
-    m.def("qjl_quant_xpu_half_float", &QJLQuantCudaTemplate<c10::Half, float>);
-    m.def("qjl_quant_xpu_float_float", &QJLQuantCudaTemplate<float, float>);
-    m.def("qjl_quant_xpu_bf16_bf16", &QJLQuantCudaTemplate<at::BFloat16, at::BFloat16>);
-    m.def("qjl_quant_xpu_bf16_float", &QJLQuantCudaTemplate<at::BFloat16, float>);
+    m.def("qjl_quant", [](
+        torch::Tensor key_states,
+        torch::Tensor outlier_indices,
+        torch::Tensor rand_prj,
+        int outlier_sketch_dim) {
+        
+        int batch = (int)key_states.size(0);
+        int head = (int)key_states.size(1);
+        int num_groups = (int)key_states.size(2);
+        int group_size = (int)key_states.size(3);
+        int emb_dim = (int)key_states.size(4);
+        int sketch_dim = (int)rand_prj.size(0);
+        int total_rows = batch * head * num_groups * group_size;
+
+        auto flat_keys = key_states.view({-1, emb_dim});
+        auto total_results = torch::matmul(flat_keys, rand_prj.t());
+        
+        auto options_u8 = torch::TensorOptions().device(torch::kXPU, 0).dtype(torch::kUInt8);
+        auto key_quant = torch::empty({batch, head, num_groups, group_size, sketch_dim / 8}, options_u8);
+        auto key_outlier_quant = torch::empty({batch, head, num_groups, group_size, outlier_sketch_dim / 8}, options_u8);
+        auto outlier_norms = torch::empty({batch, head, num_groups, group_size}, key_states.options());
+        
+        auto &q = c10::xpu::getCurrentXPUStream().queue();
+        q.submit([&](sycl::handler &cgh) {
+            auto keys_ptr = reinterpret_cast<const sycl::half*>(key_states.data_ptr<c10::Half>());
+            auto mask_ptr = outlier_indices.data_ptr<uint8_t>();
+            auto proj_ptr = reinterpret_cast<const sycl::half*>(rand_prj.data_ptr<c10::Half>());
+            auto total_ptr = reinterpret_cast<const sycl::half*>(total_results.data_ptr<c10::Half>());
+            auto quant_ptr = key_quant.data_ptr<uint8_t>();
+            auto o_quant_ptr = key_outlier_quant.data_ptr<uint8_t>();
+            auto out_norms_ptr = reinterpret_cast<sycl::half*>(outlier_norms.data_ptr<c10::Half>());
+            int outlier_counts = (int)outlier_indices.size(-1);
+            
+            sycl::local_accessor<sycl::half, 1> shared_proj(sycl::range<1>(128 * 128), cgh);
+
+            int num_blocks = (total_rows + 127) / 128;
+            cgh.parallel_for(sycl::nd_range<1>(num_blocks * 128, 128), [=](sycl::nd_item<1> item) {
+                compute_qjl_fused_multi_row_v5_kernel(keys_ptr, mask_ptr, proj_ptr, total_ptr, quant_ptr, o_quant_ptr, out_norms_ptr, total_rows, sketch_dim, emb_dim, outlier_counts,
+                    shared_proj.get_multi_ptr<sycl::access::decorated::no>().get());
+            });
+        });
+
+        return std::make_tuple(key_quant, key_outlier_quant, outlier_norms);
+    });
 }

@@ -37,6 +37,21 @@ def is_xpu_available():
 
 # ─── RotorQuant XPU kernel wrappers ───────────────────────────────────────
 
+def _compact_rotors(rotors):
+    """Convert full 8-component rotors to compact 4-component [s, p12, p13, p23].
+    
+    Full layout: [s, e1, e2, e3, e12, e13, e23, e123]  (indices 0-7)
+    Compact:     [s, p12, p13, p23]                      (indices 0, 4, 5, 6)
+    
+    If rotors are already compact (last dim == 4), pass through.
+    """
+    if rotors.dim() >= 1 and rotors.size(-1) == 8:
+        return rotors[..., [0, 4, 5, 6]].contiguous().to(torch.float32)
+    elif rotors.dim() >= 1 and rotors.size(-1) == 4:
+        return rotors.contiguous().to(torch.float32)
+    else:
+        raise ValueError(f"Unexpected rotor shape: {rotors.shape}")
+
 def rotor_full_fused(input, rotors, c_scalar, c_vector, c_bivector, c_trivector):
     dtype = input.dtype
     dispatch = {
@@ -47,8 +62,9 @@ def rotor_full_fused(input, rotors, c_scalar, c_vector, c_bivector, c_trivector)
     fn_name = dispatch.get(dtype)
     if fn_name is None:
         raise TypeError(f"Unsupported dtype: {dtype}")
+    compact = _compact_rotors(rotors)
     return getattr(xpu_rotor_fused, fn_name)(
-        input.contiguous(), rotors.contiguous(),
+        input.contiguous(), compact,
         c_scalar.contiguous(), c_scalar.size(0),
         c_vector.contiguous(), c_vector.size(0),
         c_bivector.contiguous(), c_bivector.size(0),
@@ -65,7 +81,8 @@ def rotor_sandwich(input, rotors):
     fn_name = dispatch.get(dtype)
     if fn_name is None:
         raise TypeError(f"Unsupported dtype: {dtype}")
-    return getattr(xpu_rotor_fused, fn_name)(input.contiguous(), rotors.contiguous())
+    compact = _compact_rotors(rotors)
+    return getattr(xpu_rotor_fused, fn_name)(input.contiguous(), compact)
 
 def rotor_inverse(input_mv, rotors, emb_dim):
     dtype = input_mv.dtype
@@ -77,26 +94,59 @@ def rotor_inverse(input_mv, rotors, emb_dim):
     fn_name = dispatch.get(dtype)
     if fn_name is None:
         raise TypeError(f"Unsupported dtype: {dtype}")
-    return getattr(xpu_rotor_fused, fn_name)(input_mv.contiguous(), rotors.contiguous(), emb_dim)
+    compact = _compact_rotors(rotors)
+    return getattr(xpu_rotor_fused, fn_name)(input_mv.contiguous(), compact, emb_dim)
 
+def rotor_roundtrip(input, rotors):
+    """Fused sandwich roundtrip: forward + inverse in ONE kernel launch.
+    
+    Input: (batch, emb_dim) -> Output: (batch, emb_dim)
+    Does: embed -> R*x*R~ -> R~*y*R -> extract (identity minus FP rounding)
+    """
+    dtype = input.dtype
+    dispatch = {
+        torch.float32: 'rotor_roundtrip_float',
+        torch.float16: 'rotor_roundtrip_half',
+        torch.bfloat16: 'rotor_roundtrip_bf16',
+    }
+    fn_name = dispatch.get(dtype)
+    if fn_name is None:
+        raise TypeError(f"Unsupported dtype: {dtype}")
+    compact = _compact_rotors(rotors)
+    return getattr(xpu_rotor_fused, fn_name)(input.contiguous(), compact)
+
+def rotor_fused_vec(input, rotors, c_vector, c_trivector):
+    """Fused kernel quantizing only non-zero grades (vector + trivector).
+    
+    For grade-1 inputs (KV cache vectors), grades 0,4,5,6 are exactly zero.
+    Only grades 1,2,3 (vector) and 7 (trivector) need quantization.
+    """
+    dtype = input.dtype
+    dispatch = {
+        torch.float32: 'rotor_fused_vec_float',
+        torch.float16: 'rotor_fused_vec_half',
+        torch.bfloat16: 'rotor_fused_vec_bf16',
+    }
+    fn_name = dispatch.get(dtype)
+    if fn_name is None:
+        raise TypeError(f"Unsupported dtype: {dtype}")
+    compact = _compact_rotors(rotors)
+    return getattr(xpu_rotor_fused, fn_name)(
+        input.contiguous(), compact,
+        c_vector.contiguous(), c_vector.size(0),
+        c_trivector.contiguous(), c_trivector.size(0)
+    )
 
 # ─── QJL XPU kernel wrappers ───────────────────────────────────────
 
-def qjl_quant(key_states, outlier_indices, rand_prj, outlier_sketch_dim):
-    key_dtype = key_states.dtype
-    rand_dtype = rand_prj.dtype
 
-    dispatch = {
-        (torch.half, torch.half): 'qjl_quant_xpu_half_half',
-        (torch.half, torch.float): 'qjl_quant_xpu_half_float',
-        (torch.float, torch.float): 'qjl_quant_xpu_float_float',
-        (torch.bfloat16, torch.bfloat16): 'qjl_quant_xpu_bf16_bf16',
-        (torch.bfloat16, torch.float): 'qjl_quant_xpu_bf16_float',
-    }
-    fn_name = dispatch.get((key_dtype, rand_dtype))
-    if fn_name is None:
-        raise TypeError(f"Unsupported dtypes: key={key_dtype}, proj={rand_dtype}")
-    return getattr(xpu_qjl_quant, fn_name)(key_states, outlier_indices, rand_prj, outlier_sketch_dim)
+def qjl_quant(key_states, outlier_indices, rand_prj, outlier_sketch_dim):
+    return xpu_qjl_quant.qjl_quant(
+        key_states.contiguous(), 
+        outlier_indices.contiguous(), 
+        rand_prj.contiguous(),
+        outlier_sketch_dim
+    )
 
 
 def qjl_score(key_quant, key_outlier_quant, key_norm, key_outlier_norm,
