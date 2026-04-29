@@ -38,9 +38,56 @@ def _fit_centroids_3d(samples: np.ndarray, n_centroids: int) -> np.ndarray:
     return kmeans.cluster_centers_.astype(np.float32)
 
 @torch.no_grad()
-def calibrate_xpu(model, tokenizer, n_samples=4, bits=4):
-    print(f"Calibrating XPU Codebooks (Full 8-component, {bits}-bit)...")
+def calibrate_xpu(model, tokenizer, n_samples=8, bits=4, mode='iso'):
+    print(f"Calibrating XPU Codebooks (Mode: {mode}, {bits}-bit)...")
     device = next(model.parameters()).device
+    
+    # 1. Capture KV-cache distributions
+    activations = []
+    _orig_update = DynamicCache.update
+    def hook(self, key_states, value_states, layer_idx, cache_kwargs=None):
+        if layer_idx == 0: # Sample from first layer for simplicity
+            activations.append(key_states.detach().cpu())
+        return _orig_update(self, key_states, value_states, layer_idx, cache_kwargs)
+    
+    DynamicCache.update = hook
+    for _ in range(n_samples):
+        input_ids = torch.randint(0, model.config.vocab_size, (1, 128), device=device)
+        model(input_ids, use_cache=True)
+    DynamicCache.update = _orig_update
+
+    # 2. Fit centroids
+    X = torch.cat(activations, dim=0).to(torch.float32) # (N, H, L, D)
+    D = X.size(-1)
+    
+    if mode == 'iso':
+        from sklearn.cluster import MiniBatchKMeans
+        # 4D blocks
+        X_blocks = X.view(-1, 4)
+        # Normalize blocks to match kernel behavior
+        norms = torch.norm(X_blocks, dim=-1, keepdim=True).clamp(min=1e-8)
+        X_unit = X_blocks / norms
+        
+        print(f"Fitting 4D centroids to {X_unit.size(0)} unit-normalized samples...")
+        kmeans = MiniBatchKMeans(n_clusters=2**bits, n_init=3, batch_size=1024).fit(X_unit.numpy())
+        centroids = torch.from_numpy(kmeans.cluster_centers_).to(torch.float32).to(device)
+        
+        # Binary search requires sorted centroids (for each component)
+        # For 4D, we can sort by the first component or just sort all elements if it's a 1D scalar fallback.
+        # Wait, IsoQuant uses 4D blocks but SCALAR quantization per component.
+        # So we need a 1D sorted codebook for all components.
+        
+        # Flatten and sort to get a 1D scalar codebook from the 4D clusters
+        centroids_1d, _ = torch.sort(centroids.flatten())
+        # We need exactly 2**bits levels.
+        # If we had (2**bits, 4), we have 4 * 2**bits values.
+        # Let's just take the unique-ish 2**bits values or just fit a 1D kmeans.
+        
+        print(f"Fitting 1D scalar codebook for components...")
+        kmeans_1d = MiniBatchKMeans(n_clusters=2**bits, n_init=3).fit(X_unit.flatten().numpy().reshape(-1, 1))
+        cb_1d, _ = torch.sort(torch.from_numpy(kmeans_1d.cluster_centers_).flatten())
+        return {'iso_centroids': cb_1d.to(device)}
+    
     n_layers = model.config.num_hidden_layers
     head_dim = model.config.hidden_size // model.config.num_attention_heads
     n_groups = (head_dim + 2) // 3

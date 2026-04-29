@@ -1,8 +1,36 @@
 import torch
 import torch.nn as nn
+import math
 from tqdm import tqdm
 from transformers import DynamicCache
-from turboquant import xpu_backend
+from turboquant import xpu_backend, isoquant
+
+class IsoQuantCache(DynamicCache):
+    def __init__(self, model_config, n_levels=16, centroids=None):
+        super().__init__()
+        self.head_dim = getattr(model_config, "head_dim", model_config.hidden_size // model_config.num_attention_heads)
+        self.n_levels = n_levels
+        self.q_dict = {}
+        self.cb_dict = {}
+        self.device = torch.device("xpu")
+        self.calibrated_centroids = centroids
+
+    def update(self, key_states, value_states, layer_idx, cache_kwargs=None):
+        if layer_idx not in self.q_dict:
+            iso = isoquant.IsoQuantMSE(self.head_dim, int(math.log2(self.n_levels)), mode='fast', device='cpu')
+            self.q_dict[layer_idx] = iso.q_L.to(self.device)
+            if self.calibrated_centroids is not None:
+                self.cb_dict[layer_idx] = self.calibrated_centroids.to(self.device)
+            else:
+                self.cb_dict[layer_idx] = iso.centroids.to(self.device)
+        
+        qL = self.q_dict[layer_idx]
+        cb = self.cb_dict[layer_idx]
+        
+        k_q = xpu_backend.isoquant_fused(key_states, qL, cb)
+        v_q = xpu_backend.isoquant_fused(value_states, qL, cb)
+
+        return super().update(k_q, v_q, layer_idx, cache_kwargs)
 
 class RotorQuantCache(DynamicCache):
     """
@@ -61,27 +89,19 @@ class RotorQuantCache(DynamicCache):
 
         return super().update(k_q, v_q, layer_idx, cache_kwargs)
 
-def evaluate_ppl(model, tokenizer, dataset="wikitext-2", n_samples=32, seq_len=512, cache_class=None, **cache_kwargs):
+def evaluate_ppl(model, tokenizer, text=None, n_samples=1, seq_len=512, cache_class=None, **cache_kwargs):
     model.eval()
-    # For Wikitext-2, we typically load from HF datasets
-    # But for a quick check, we can use a small local sample or a hardcoded one
-    # I'll use a placeholder for now
+    if text is None:
+        text = "The quick brown fox jumps over the lazy dog. Artificial intelligence is transforming the world of technology."
     
-    total_loss = 0
-    count = 0
+    encodings = tokenizer(text, return_tensors="pt")
+    input_ids = encodings.input_ids.to(model.device)
+    labels = input_ids.clone()
     
-    # Mock data loop
-    for i in range(n_samples):
-        input_ids = torch.randint(0, model.config.vocab_size, (1, seq_len), device=model.device)
-        labels = input_ids.clone()
-        
-        past_key_values = cache_class(**cache_kwargs) if cache_class else None
-        
-        with torch.no_grad():
-            outputs = model(input_ids, labels=labels, past_key_values=past_key_values)
-            loss = outputs.loss
-            total_loss += loss.item()
-            count += 1
+    past_key_values = cache_class(**cache_kwargs) if cache_class else None
+    
+    with torch.no_grad():
+        outputs = model(input_ids, labels=labels, past_key_values=past_key_values)
+        loss = outputs.loss
             
-    avg_loss = total_loss / count
-    return torch.exp(torch.tensor(avg_loss)).item()
+    return torch.exp(loss).item()
