@@ -3,22 +3,22 @@
 ## Project Objective
 Stabilize a high-fidelity performance benchmarking suite for Qwen3.5-2B on Intel Arc Pro B70 to validate custom Rotor/Iso SYCL kernels.
 
-## Current Status: Native llama.cpp Integration [ACTIVE]
-We are currently integrating the custom RotorQuant/IsoQuant kernels into the native `llama.cpp` GGML backend. 
+## Current Status: [DEBUGGING SYCL INITIALIZATION]
+- **Goal**: Establish a stable SYCL device discovery flow on Intel Arc Pro B70.
+- **Problem**: `std::bad_array_new_length` exception in `dpct::dev_mgr::instance().device_count()` during startup.
+- **Recent Progress**: 
+    - Implemented `try-catch` instrumentation to prevent silent hangs in `llama-cli`.
+    - Identified that `dpct` wrapper failure is likely a driver/runtime mismatch for Arc Pro B70.
+    - Successfully validated that `llama-cli --version` can now run to completion by catching the exception.
 
-### Recent Progress
-- **Status: SYCL Kernels Integrated [ACTIVE]**
-- **Quantization Logic**: `ISO4` and `ROTOR4` registered in `ggml.h` and `ggml-common.h`. Reference implementations (CPU) completed in `ggml-quants.c`.
-- **SYCL Kernels**: 
-    - `vec_dot_fattn_vec_KQ_iso4` implemented in `fattn-common.hpp` using Lloyd-Max centroids.
-    - `dequantize_V_iso4` implemented in `fattn-common.hpp`.
-    - `ROTOR4` kernels currently use `ISO4` as a high-fidelity proxy until rotor integration is finalized.
-- **Ground Truth**:
-    - Centroids are derived from Lloyd-Max optimization for a normal distribution.
-    - KV cache quantization is decoupled from weights to avoid signal degradation.
-- **Blockers**:
-    - **Rotor Access**: Rotors for `ROTOR4` are not yet passed into the `fattn` API. Integration plan needed for static vs dynamic rotors.
-    - **Accuracy Verification**: Need to run PPL tests on the newly integrated native kernels.
+## Blockers
+- [CRITICAL] **SYCL Runtime Discovery**: The `dpct` wrapper triggers a memory allocation error. Must bypass or fix to enable GPU acceleration.
+- [RESOLVED] **Stale Binary Linking**: Forced clean relink of `ggml-sycl.dll` to ensure instrumentation is live.
+
+## Pending Tasks
+- [ ] Bypass `dpct::dev_mgr` using native `sycl::device::get_devices()` for enumeration.
+- [ ] Investigate `ONEAPI_DEVICE_SELECTOR` environment variables to filter out problematic sub-devices.
+- [ ] Run comprehensive PPL/Latency/VRAM benchmark suite once initialized.
 
 ## Technical Failure Repository [PERSISTENT]
 | Failure | Context | Reason | Resolved |
