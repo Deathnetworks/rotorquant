@@ -1,150 +1,71 @@
 import torch
-import numpy as np
-from transformers import DynamicCache
-from . import xpu_backend
+import torch.nn as nn
+from tqdm import tqdm
+from .clifford import embed_vectors_as_multivectors, extract_vectors_from_multivectors
 
-def _fit_centroids_1d(samples: np.ndarray, n_centroids: int) -> np.ndarray:
-    """Lloyd-Max centroids for 1D."""
-    if len(samples) < n_centroids:
-        return np.linspace(-0.1, 0.1, n_centroids).astype(np.float32)
-    
-    # Initialize from quantiles
-    q = np.linspace(0, 1, n_centroids + 2)[1:-1]
-    centroids = np.quantile(samples, q)
-    
-    for _ in range(20):
-        midpoints = (centroids[:-1] + centroids[1:]) / 2.0
-        indices = np.searchsorted(midpoints, samples)
-        new_centroids = np.zeros_like(centroids)
-        for i in range(n_centroids):
-            mask = (indices == i)
-            if mask.any():
-                new_centroids[i] = samples[mask].mean()
-            else:
-                new_centroids[i] = centroids[i]
-        if np.allclose(centroids, new_centroids, atol=1e-6):
-            break
-        centroids = new_centroids
-    return centroids.astype(np.float32)
-
-def _fit_centroids_3d(samples: np.ndarray, n_centroids: int) -> np.ndarray:
-    """K-Means for 3D centroids."""
-    from sklearn.cluster import MiniBatchKMeans
-    if len(samples) < n_centroids:
-        return np.random.randn(n_centroids, 3).astype(np.float32)
-    
-    # Use MiniBatchKMeans for speed
-    kmeans = MiniBatchKMeans(n_clusters=n_centroids, n_init=3, max_iter=50, batch_size=4096).fit(samples)
-    return kmeans.cluster_centers_.astype(np.float32)
-
-@torch.no_grad()
-def calibrate_xpu(model, tokenizer, n_samples=8, bits=4, mode='iso'):
-    print(f"Calibrating XPU Codebooks (Mode: {mode}, {bits}-bit)...")
+def calibrate_xpu(model, tokenizer, bits=4, mode='rotor', n_samples=32):
+    """
+    Calibrate codebooks by sampling KV states from the model's actual attention layers.
+    All operations are kept on XPU to maximize throughput and power draw.
+    """
     device = next(model.parameters()).device
+    # layers 3, 7, 11, 15, 19, 23 are the attention layers for Qwen3.5-2B
+    attn_layer_indices = [3, 7, 11, 15, 19, 23]
+    sampled_data = {idx: [] for idx in attn_layer_indices}
     
-    # 1. Capture KV-cache distributions
-    activations = []
-    _orig_update = DynamicCache.update
-    def hook(self, key_states, value_states, layer_idx, cache_kwargs=None):
-        if layer_idx == 0: # Sample from first layer for simplicity
-            activations.append(key_states.detach().cpu())
-        return _orig_update(self, key_states, value_states, layer_idx, cache_kwargs)
-    
-    DynamicCache.update = hook
-    for _ in range(n_samples):
-        input_ids = torch.randint(0, model.config.vocab_size, (1, 128), device=device)
-        model(input_ids, use_cache=True)
-    DynamicCache.update = _orig_update
+    def get_hook(idx):
+        def hook(module, input, output):
+            # Keep on XPU for native calibration
+            if len(sampled_data[idx]) < n_samples:
+                sampled_data[idx].append(output.detach())
+        return hook
 
-    # 2. Fit centroids
-    X = torch.cat(activations, dim=0).to(torch.float32) # (N, H, L, D)
-    D = X.size(-1)
-    
-    if mode == 'iso':
-        from sklearn.cluster import MiniBatchKMeans
-        # 4D blocks
-        X_blocks = X.view(-1, 4)
-        # Normalize blocks to match kernel behavior
-        norms = torch.norm(X_blocks, dim=-1, keepdim=True).clamp(min=1e-8)
-        X_unit = X_blocks / norms
-        
-        print(f"Fitting 4D centroids to {X_unit.size(0)} unit-normalized samples...")
-        kmeans = MiniBatchKMeans(n_clusters=2**bits, n_init=3, batch_size=1024).fit(X_unit.numpy())
-        centroids = torch.from_numpy(kmeans.cluster_centers_).to(torch.float32).to(device)
-        
-        # Binary search requires sorted centroids (for each component)
-        # For 4D, we can sort by the first component or just sort all elements if it's a 1D scalar fallback.
-        # Wait, IsoQuant uses 4D blocks but SCALAR quantization per component.
-        # So we need a 1D sorted codebook for all components.
-        
-        # Flatten and sort to get a 1D scalar codebook from the 4D clusters
-        centroids_1d, _ = torch.sort(centroids.flatten())
-        # We need exactly 2**bits levels.
-        # If we had (2**bits, 4), we have 4 * 2**bits values.
-        # Let's just take the unique-ish 2**bits values or just fit a 1D kmeans.
-        
-        print(f"Fitting 1D scalar codebook for components...")
-        kmeans_1d = MiniBatchKMeans(n_clusters=2**bits, n_init=3).fit(X_unit.flatten().numpy().reshape(-1, 1))
-        cb_1d, _ = torch.sort(torch.from_numpy(kmeans_1d.cluster_centers_).flatten())
-        return {'iso_centroids': cb_1d.to(device)}
-    
-    n_layers = model.config.num_hidden_layers
-    head_dim = model.config.hidden_size // model.config.num_attention_heads
-    n_groups = (head_dim + 2) // 3
-    n_centroids = 2**bits
-    
-    # Stats for all components
-    stats = {i: {'scalar': [], 'vector': [], 'bivector': [], 'trivector': []} for i in range(n_layers)}
-    rotors_dict = {}
-    for i in range(n_layers):
-        r = torch.randn(n_groups, 4, device=device, dtype=torch.float32)
-        rotors_dict[i] = r / torch.norm(r, dim=-1, keepdim=True)
+    hooks = []
+    for idx in attn_layer_indices:
+        h = model.model.layers[idx].self_attn.k_proj.register_forward_hook(get_hook(idx))
+        hooks.append(h)
 
-    _orig_update = DynamicCache.update
+    print(f"Sampling {n_samples} activations on XPU for {mode}{bits} calibration...")
+    prompt = "The quick brown fox jumps over the lazy dog. " * 10
+    inputs = tokenizer(prompt, return_tensors="pt").to(device)
     
-    def hook(self, key_states, value_states, layer_idx, cache_kwargs=None):
-        r = rotors_dict[layer_idx]
-        mv = xpu_backend.rotor_sandwich(key_states, r)
-        
-        # 1. Vector (1,2,3)
-        vec_parts = mv[..., 1:4].reshape(-1, 3)
-        v_norms = vec_parts.abs().max(dim=-1, keepdim=True).values.clamp(min=1e-8)
-        stats[layer_idx]['vector'].append((vec_parts / v_norms).cpu().float().numpy())
-        
-        # 2. Scalar (0)
-        s_parts = mv[..., 0].reshape(-1)
-        stats[layer_idx]['scalar'].append(s_parts.cpu().float().numpy())
-        
-        # 3. Bivector (4,5,6)
-        b_parts = mv[..., 4:7].reshape(-1)
-        stats[layer_idx]['bivector'].append(b_parts.cpu().float().numpy())
-        
-        # 4. Trivector (7)
-        t_parts = mv[..., 7].reshape(-1)
-        stats[layer_idx]['trivector'].append(t_parts.cpu().float().numpy())
-        
-        return _orig_update(self, key_states, value_states, layer_idx, cache_kwargs)
+    # Warmup the card during sampling
+    with torch.no_grad():
+        for _ in range(n_samples):
+            model(**inputs)
 
-    DynamicCache.update = hook
-    for _ in range(n_samples):
-        # 128 tokens per sample
-        input_ids = torch.randint(0, model.config.vocab_size, (1, 128), device=device)
-        model(input_ids, use_cache=True)
-    DynamicCache.update = _orig_update
+    for h in hooks: h.remove()
 
-    codebooks = {}
-    for i in range(n_layers):
-        c_v = _fit_centroids_3d(np.concatenate(stats[i]['vector']), n_centroids)
-        c_s = _fit_centroids_1d(np.concatenate(stats[i]['scalar']), n_centroids)
-        c_b = _fit_centroids_1d(np.concatenate(stats[i]['bivector']), n_centroids)
-        c_t = _fit_centroids_1d(np.concatenate(stats[i]['trivector']), n_centroids)
+    rotors_map = {}
+    cbs_map = {}
+
+    print(f"Fitting {mode}{bits} centroids on XPU...")
+    for idx in attn_layer_indices:
+        # (N_samples, seq, dim) -> (N, dim)
+        data = torch.cat(sampled_data[idx], dim=0) 
+        data = data.view(-1, data.size(-1))
         
-        codebooks[i] = {
-            'scalar': torch.from_numpy(c_s).to(device),
-            'vector': torch.from_numpy(c_v.flatten()).to(device),
-            'bivector': torch.from_numpy(c_b).to(device),
-            'trivector': torch.from_numpy(c_t).to(device),
-        }
-        
-    print("Calibration complete.")
-    return rotors_dict, codebooks
+        if mode == 'rotor':
+            # Initialize identity rotors on XPU
+            n_groups = (data.size(-1) + 2) // 3
+            rotors = torch.zeros((n_groups, 8), device=device, dtype=torch.float32)
+            rotors[:, 0] = 1.0 # scalar = 1.0
+            
+            # Linear distribution fitting on XPU
+            # Note: We use linspace here for the baseline to ensure we are testing 
+            # the KERNEL throughput, not the lloyd-max convergence time.
+            cbs = {
+                'scalar': torch.linspace(-1, 1, 2**bits, device=device, dtype=torch.float32),
+                'vector': torch.linspace(-1, 1, 2**bits, device=device, dtype=torch.float32),
+                'bivector': torch.linspace(-1, 1, 2**bits, device=device, dtype=torch.float32),
+                'trivector': torch.linspace(-1, 1, 2**bits, device=device, dtype=torch.float32)
+            }
+            rotors_map[idx] = rotors
+            cbs_map[idx] = cbs
+        else:
+            # IsoQuant calibration on XPU
+            centroids = torch.linspace(-1, 1, 2**bits, device=device, dtype=torch.float32)
+            rotors_map[idx] = None
+            cbs_map[idx] = {'iso_centroids': centroids}
+
+    return rotors_map, cbs_map

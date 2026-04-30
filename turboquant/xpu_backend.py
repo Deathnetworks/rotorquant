@@ -65,8 +65,9 @@ def _compact_rotors(rotors):
 def rotor_full_fused(input, rotors, c_scalar, c_vector, c_bivector, c_trivector):
     """Fused kernel quantizing all grades."""
     fn_name = "rotor_full_fused_half" if input.dtype == torch.half else "rotor_full_fused_bf16"
+    compact = _compact_rotors(rotors)
     return getattr(xpu_rotor_fused, fn_name)(
-        input.contiguous(), rotors.contiguous(),
+        input.contiguous(), compact,
         c_scalar.contiguous(), c_scalar.size(0),
         c_vector.contiguous(), c_vector.size(0),
         c_bivector.contiguous(), c_bivector.size(0),
@@ -76,8 +77,9 @@ def rotor_full_fused(input, rotors, c_scalar, c_vector, c_bivector, c_trivector)
 def rotor_compress(input, rotors, c_scalar, c_vector, c_bivector, c_trivector):
     """Fused compress-only kernel."""
     fn_name = "rotor_compress_half" if input.dtype == torch.half else "rotor_compress_bf16"
+    compact = _compact_rotors(rotors)
     return getattr(xpu_rotor_fused, fn_name)(
-        input.contiguous(), rotors.contiguous(),
+        input.contiguous(), compact,
         c_scalar.contiguous(), c_scalar.size(0),
         c_vector.contiguous(), c_vector.size(0),
         c_bivector.contiguous(), c_bivector.size(0),
