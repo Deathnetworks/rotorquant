@@ -42,4 +42,6 @@ Finalizing RotorQuant SYCL Kernels (ISO4/ROTOR4) for parity with CPU reference a
 - [vecdotq.hpp](file:///d:/User%20Files/Desktop/RotorQuant/llamacpp/ggml/src/ggml-sycl/vecdotq.hpp): Implementation of new kernels.
 - [mmvq.cpp](file:///d:/User%20Files/Desktop/RotorQuant/llamacpp/ggml/src/ggml-sycl/mmvq.cpp): Dispatch logic.
 - [baseline_results_xpu.md](file:///d:/User%20Files/Desktop/RotorQuant/baseline_results_xpu.md): Performance data.
-
+- [RotorQuant Paper](/paper/rotorquant.md)
+- [IsoQuant Paper 1](/paper/isoquant%20paper%201.md)
+- [IsoQuant Paper 2](/paper/isoquant%20paper%202.md)
