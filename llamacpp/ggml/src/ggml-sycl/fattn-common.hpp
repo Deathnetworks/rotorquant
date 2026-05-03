@@ -611,7 +611,8 @@ static __dpct_inline__ float vec_dot_fattn_vec_KQ_iso4(const char * __restrict__
     };
     
     float q_rot[4];
-    quat_multiply_left(s, qx, qy, qz, q_vec, q_rot);
+    // Use inverse rotation (conjugate)
+    quat_multiply_left(s, -qx, -qy, -qz, q_vec, q_rot);
 
     float sum = 0.0f;
     for (int i = 0; i < 4; ++i) {
@@ -663,7 +664,8 @@ static __dpct_inline__ float vec_dot_fattn_vec_KQ_rotor4(const char * __restrict
         const int q_offset = ib * 32 + g * 3;
         float q_vec[3] = {(float)Q_ptr[q_offset + 0], (float)Q_ptr[q_offset + 1], (float)Q_ptr[q_offset + 2]};
         float q_rot[3];
-        rotor_sandwich_vec(s, p12, p13, p23, q_vec, q_rot);
+        // Use inverse rotation (reverse rotor)
+        rotor_sandwich_vec(s, -p12, -p13, -p23, q_vec, q_rot);
 
         for (int i = 0; i < 3; ++i) {
             int idx = g*3 + i;
@@ -681,7 +683,8 @@ static __dpct_inline__ float vec_dot_fattn_vec_KQ_rotor4(const char * __restrict
         const int q_offset = ib * 32 + g * 3;
         float q_vec[3] = {(float)Q_ptr[q_offset + 0], (float)Q_ptr[q_offset + 1], (float)Q_ptr[q_offset + 2]};
         float q_rot[3];
-        rotor_sandwich_vec(s, p12, p13, p23, q_vec, q_rot);
+        // Use inverse rotation (reverse rotor)
+        rotor_sandwich_vec(s, -p12, -p13, -p23, q_vec, q_rot);
 
         for (int i = 0; i < 3; ++i) {
             int idx = g*3 + i;

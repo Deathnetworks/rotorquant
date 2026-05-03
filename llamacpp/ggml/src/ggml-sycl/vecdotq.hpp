@@ -1393,81 +1393,74 @@ vec_dot_iq1_s_q8_1(const void *__restrict__ vbq,
 
 #define VDR_ISO4_Q8_1_MMVQ 4
 
-static __dpct_inline__ float
-vec_dot_iso4_q8_1(const void *__restrict__ vbq,
-                  const block_q8_1 *__restrict__ bq8_1, const int &iqs, const int &ibx) {
-    GGML_UNUSED(iqs);
-    const block_iso4 * bq4 = (const block_iso4 *) vbq;
-    const float d4 = (float)bq4->d;
-    const sycl::float2 ds8 = bq8_1->ds.convert<float, sycl::rounding_mode::automatic>();
-    const float dq = d4 * ds8.x();
+static __dpct_inline__ float vec_dot_iso4_q8_1(const void * __restrict__ vbq, const block_q8_1 * __restrict__ bq8_1, const int & iqs, const int & ibx) {
+    const block_iso4 * bq4 = (const block_iso4 *)vbq;
+    const uint8_t    * qs4 = bq4->qs;
+    const int8_t     * u8 = (const int8_t *)bq8_1->qs;
+
+    const float dq = (float)bq4->d;
+    const sycl::float2 daf = bq8_1->ds.convert<float, sycl::rounding_mode::automatic>();
+    const float da = daf.x();
 
     float sum = 0.0f;
-    const int8_t * u8 = (const int8_t *)bq8_1->qs;
-
     const int g = iqs / 4;
     if (g >= 8) return 0.0f;
 
     float s, qx, qy, qz;
     get_deterministic_quaternion(ibx * 8 + g, &s, &qx, &qy, &qz);
-    
+
     float q_vec[4] = {(float)u8[g*4], (float)u8[g*4+1], (float)u8[g*4+2], (float)u8[g*4+3]};
     float q_rot[4];
-    quat_multiply_left(s, qx, qy, qz, q_vec, q_rot);
+    // Use inverse rotation (conjugate)
+    quat_multiply_left(s, -qx, -qy, -qz, q_vec, q_rot);
 
     for (int i = 0; i < 4; ++i) {
         int idx = g*4 + i;
-        int ki = (bq4->qs[idx/2] >> (4 * (idx%2))) & 0x0F;
-        sum += dq * iso4_normalized_centroids[ki] * q_rot[i];
+        int ki = (qs4[idx/2] >> (4 * (idx%2))) & 0x0F;
+        sum += dq * da * iso4_normalized_centroids[ki] * q_rot[i];
     }
     return sum;
 }
 
 #define VDR_ROTOR4_Q8_1_MMVQ 4
 
-static __dpct_inline__ float
-vec_dot_rotor4_q8_1(const void *__restrict__ vbq,
-                  const block_q8_1 *__restrict__ bq8_1, const int &iqs, const int &ibx) {
-    GGML_UNUSED(iqs);
-    const block_rotor4 * bq4 = (const block_rotor4 *) vbq;
-    const float d4 = (float)bq4->d;
-    const sycl::float2 ds8 = bq8_1->ds.convert<float, sycl::rounding_mode::automatic>();
-    const float dq = d4 * ds8.x();
-
-    float sum = 0.0f;
-    const int8_t * u8 = (const int8_t *)bq8_1->qs;
-
-    for (int i = 0; i < 4; ++i) {
-        int idx = iqs + i;
-        if (idx >= 32) break;
-static __dpct_inline__ float vec_dot_rotor4_q8_1(const void * __restrict__ vx, const void * __restrict__ vy, const int iqs, const int ibx) {
-    const block_rotor4 * bq4 = (const block_rotor4 *)vx;
-    const block_q8_1   * bq8_1 = (const block_q8_1 *)vy;
+static __dpct_inline__ float vec_dot_rotor4_q8_1(const void * __restrict__ vbq, const block_q8_1 * __restrict__ bq8_1, const int & iqs, const int & ibx) {
+    const block_rotor4 * bq4 = (const block_rotor4 *)vbq;
     const uint8_t      * qs4 = bq4->qs;
     const int8_t       * u8 = (const int8_t *)bq8_1->qs;
 
     const float dq = (float)bq4->d;
-    const float da = (float)bq8_1->d;
+    const sycl::float2 daf = bq8_1->ds.convert<float, sycl::rounding_mode::automatic>();
+    const float da = daf.x();
 
     float sum = 0.0f;
-    for (int g = 0; g < 10; ++g) {
-        float s, p12, p13, p23;
-        get_deterministic_rotor(ibx * 10 + g, s, p12, p13, p23);
+    // Each thread in a warp handles a chunk of the row.
+    // iqs is the starting element index for this thread.
+    // For ROTOR4, we have groups of 3.
+    for (int i = 0; i < 4; ++i) {
+        int idx = iqs + i;
+        if (idx >= 32) break;
 
-        float q_vec[3] = {(float)u8[g*3], (float)u8[g*3+1], (float)u8[g*3+2]};
-        float q_rot[3];
-        rotor_sandwich_vec(s, p12, p13, p23, q_vec, q_rot);
+        if (idx < 30) {
+            int g = idx / 3;
+            int m = idx % 3;
 
-        for (int i = 0; i < 3; ++i) {
-            const uint8_t ki = (g % 2 == 0) ? (qs4[g/2*3 + i] & 0x0F) : (qs4[g/2*3 + i] >> 4);
-            sum += dq * da * rotor4_normalized_centroids[ki] * q_rot[i];
+            float s, p12, p13, p23;
+            get_deterministic_rotor(ibx * 10 + g, s, p12, p13, p23);
+            
+            float q_vec[3] = {(float)u8[g*3], (float)u8[g*3+1], (float)u8[g*3+2]};
+            float q_rot[3];
+            // Use inverse rotation (reverse rotor)
+            rotor_sandwich_vec(s, -p12, -p13, -p23, q_vec, q_rot);
+
+            int ki = (qs4[idx/2] >> (4 * (idx%2))) & 0x0F;
+            sum += dq * da * rotor4_normalized_centroids[ki] * q_rot[m];
+        } else {
+            // Leftovers (indices 30, 31)
+            int ki = (qs4[idx/2] >> (4 * (idx%2))) & 0x0F;
+            sum += dq * da * rotor4_normalized_centroids[ki] * (float)u8[idx];
         }
     }
-
-    // Leftovers
-    sum += dq * da * (float)qs4[15] * (float)u8[30];
-    sum += dq * da * (float)qs4[16] * (float)u8[31];
-
     return sum;
 }
 
