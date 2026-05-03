@@ -1440,25 +1440,34 @@ vec_dot_rotor4_q8_1(const void *__restrict__ vbq,
     for (int i = 0; i < 4; ++i) {
         int idx = iqs + i;
         if (idx >= 32) break;
+static __dpct_inline__ float vec_dot_rotor4_q8_1(const void * __restrict__ vx, const void * __restrict__ vy, const int iqs, const int ibx) {
+    const block_rotor4 * bq4 = (const block_rotor4 *)vx;
+    const block_q8_1   * bq8_1 = (const block_q8_1 *)vy;
+    const uint8_t      * qs4 = bq4->qs;
+    const int8_t       * u8 = (const int8_t *)bq8_1->qs;
 
-        if (idx < 30) {
-            int g = idx / 3;
-            int m = idx % 3;
+    const float dq = (float)bq4->d;
+    const float da = (float)bq8_1->d;
 
-            float s, p12, p13, p23;
-            get_deterministic_rotor(ibx * 10 + g, s, p12, p13, p23);
-            
-            float q_vec[3] = {(float)u8[g*3], (float)u8[g*3+1], (float)u8[g*3+2]};
-            float q_rot[3];
-            rotor_sandwich_vec(s, p12, p13, p23, q_vec, q_rot);
+    float sum = 0.0f;
+    for (int g = 0; g < 10; ++g) {
+        float s, p12, p13, p23;
+        get_deterministic_rotor(ibx * 10 + g, s, p12, p13, p23);
 
-            int ki = (bq4->qs[idx/2] >> (4 * (idx%2))) & 0x0F;
-            sum += dq * rotor4_normalized_centroids[ki] * q_rot[m];
-        } else {
-            int ki = (bq4->qs[idx/2] >> (4 * (idx%2))) & 0x0F;
-            sum += dq * rotor4_normalized_centroids[ki] * (float)u8[idx];
+        float q_vec[3] = {(float)u8[g*3], (float)u8[g*3+1], (float)u8[g*3+2]};
+        float q_rot[3];
+        rotor_sandwich_vec(s, p12, p13, p23, q_vec, q_rot);
+
+        for (int i = 0; i < 3; ++i) {
+            const uint8_t ki = (g % 2 == 0) ? (qs4[g/2*3 + i] & 0x0F) : (qs4[g/2*3 + i] >> 4);
+            sum += dq * da * rotor4_normalized_centroids[ki] * q_rot[i];
         }
     }
+
+    // Leftovers
+    sum += dq * da * (float)qs4[15] * (float)u8[30];
+    sum += dq * da * (float)qs4[16] * (float)u8[31];
+
     return sum;
 }
 
