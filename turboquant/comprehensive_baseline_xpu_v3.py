@@ -7,15 +7,16 @@ import sys
 
 # Paths
 ROOT = r"d:\User Files\Desktop\RotorQuant"
-LLAMA_BENCH = os.path.join(ROOT, r"llamacpp\build\bin\llama-bench.exe")
-LLAMA_CLI = os.path.join(ROOT, r"llamacpp\build\bin\llama-cli.exe")
-LLAMA_PERP = os.path.join(ROOT, r"llamacpp\build\bin\llama-perplexity.exe")
+BINARY_DIR = os.path.join(ROOT, r"llamacpp\build\bin")
+LLAMA_BENCH = os.path.join(BINARY_DIR, "llama-bench.exe")
+LLAMA_CLI = os.path.join(BINARY_DIR, "llama-cli.exe")
+LLAMA_PERP = os.path.join(BINARY_DIR, "llama-perplexity.exe")
 SETVARS = r"C:\Program Files (x86)\Intel\oneAPI\setvars.bat"
 MODEL = os.path.join(ROOT, r"models\Qwen3.5-2B-BF16.gguf")
 DATASET = os.path.join(ROOT, r"wikitext-test.txt") # Use the 1.3MB file
 
-TYPES = ["f16", "q8_0", "iso4", "rotor4"]
-CONTEXT_LENGTHS = [512, 4096, 16384, 32768]
+TYPES = ["f16", "q8_0", "q4_0", "q4_1", "iso4", "rotor4"]
+CONTEXT_LENGTHS = [512, 1024, 2048]
 
 # Paper References for Grounding
 PAPERS = {
@@ -35,8 +36,8 @@ def run_command(cmd, cwd=None, env_debug=False):
     
     try:
         # Increased timeout for large context / PPL
-        res = subprocess.run(f'"{batch_file}"', capture_output=True, text=True, shell=True, cwd=cwd, timeout=1200)
-        return res.stdout, res.stderr
+        res = subprocess.run(f'"{batch_file}"', capture_output=True, text=True, shell=True, cwd=cwd, timeout=1200, encoding='utf-8', errors='replace')
+        return res.stdout or "", res.stderr or ""
     except subprocess.TimeoutExpired:
         print("    Command timed out! Killing llama processes...")
         subprocess.run("taskkill /f /im llama*", shell=True, capture_output=True)

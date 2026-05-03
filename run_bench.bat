@@ -1,0 +1,6 @@
+@echo off
+call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" > nul
+echo Testing Generation...
+.\llamacpp\build\bin\llama-bench.exe -m .\models\Qwen3.5-2B-ISO4.gguf -p 1 -n 128 -fa 1 -ngl 99
+echo Testing Prompt Processing...
+.\llamacpp\build\bin\llama-bench.exe -m .\models\Qwen3.5-2B-ISO4.gguf -p 128 -n 1 -fa 1 -ngl 99

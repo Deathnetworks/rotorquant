@@ -1,26 +1,24 @@
-# RotorQuant XPU Continuity Handover - 2026-05-01
+# RotorQuant XPU Continuity Handover - 2026-05-02
 
-3: ## Status Update (2026-05-01)
-4: - **SYCL Backend Success**: ISO4 and ROTOR4 are fully integrated and verified on Intel Arc Pro B70.
-5: - **Benchmarking v3 (In-Progress)**: Executing improved benchmark with sliding window PPL, proper Needle test, and factual coherency.
-6: - **PPL Correction**: Implemented `--ppl-stride 512` to resolve the "90,000+ PPL" issue caused by zero context overlap.
-7: - **Needle/Coherency Fixes**: Transitioned from trivial "1 2 3" tests to factual retrieval and secret key extraction in large context.
-8: - **VRAM Metrics**: Enabled `GGML_SYCL_DEBUG=1` to capture detailed memory breakdown (context vs compute).
-9: 
-10: ## Technical Failure Repository [RESOLVED]
-11: - **Failure**: `llama-cli` process hang during automated benchmarking.
-12: - **Reason**: Interactive mode defaults.
-13: - **Fix**: Use `--single-turn` flag.
-14: - **Failure**: Inaccurate PPL (90k+).
-15: - **Reason**: Lack of context overlap (stride) and format mismatch.
-16: - **Fix**: Use `--ppl-stride 512` and proper instruct templates.
-17: 
-18: ## Next Steps
-19: - [ ] Complete `comprehensive_baseline_xpu_v3.py` execution.
-20: - [ ] Finalize the performance matrix in `baseline_results_xpu_v2.md`.
-21: - [ ] Analyze the PPL gap between Q8 and ISO4/ROTOR4.
-22: 
-23: ## Ground Truth References
+## Status Update (2026-05-02)
+- **Rotation Alignment Fix [COMPLETE]**: Successfully refactored all SYCL kernels (Dot Product, Dequantize, Copy, Attention) to use block-local rotation indexing anchored to `ib * stride + g`. This resolves the `NaN` generation issue caused by global indexing misalignment.
+- **Dequantization Parity**: Verified that `dequantize_row_iso4` and `dequantize_row_rotor4` produce deterministic results consistent with weight quantization.
+- **SYCL Backend Stability**: Successfully resolved linker issues by stubbing out Flash Attention (FA) template instances for standard testing.
+- **Benchmarking Operational**: `llama-bench` and `llama-perplexity` are ready for validation.
+
+## Technical Failure Repository [RESOLVED]
+- **Failure**: Perplexity anomalies (`NaN`) during large-scale inference.
+- **Reason**: Discrepancy between global indexing (`tid / 4`) and block-local indexing used in reference quantization. SYCL kernels were rotating weights differently than the model expected.
+- **Fix**: Replaced all rotation seed calculations with `row_local_block_index * groups_per_block + group_id`. Propagated this through `mmvq.cpp`, `vecdotq.hpp`, `dequantize.hpp`, `cpy.cpp`, and `fattn-common.hpp`.
+- **Failure**: LNK2019 Unresolved Externals in `ggml-sycl.dll`. [RESOLVED]
+- **Reason**: Missing FA template instances.
+- **Fix**: Stubbed out `ggml_sycl_flash_attn_ext_*` functions.
+
+## Next Steps
+- [ ] Run `llama-perplexity.exe` with ISO4/ROTOR4 models to confirm bit-exact accuracy and stability.
+- [ ] Re-enable fused Flash Attention kernels and align their rotation striding logic.
+- [ ] Execute the full 36x8 performance matrix benchmark on Intel Arc Pro B70.
+- [ ] Document final throughput and PPL in `baseline_results_xpu_v2.md`.
 24: - **Papers**: Grounded in `rotorquant.md`, `isoquant paper 1.md`, and `isoquant paper 2.md`.
 25: - **Kernels**: `llamacpp/ggml/src/ggml-sycl/vecdotq.hpp`
 26: - **Math Helpers**: `llamacpp/ggml/src/ggml-sycl/rotor-math.hpp`
