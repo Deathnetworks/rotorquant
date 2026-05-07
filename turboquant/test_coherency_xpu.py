@@ -28,7 +28,7 @@ def test_coherency(model_id="Qwen/Qwen2.5-3B-Instruct"):
         inputs = tokenizer(text, return_tensors="pt").to(device)
         
         with torch.no_grad():
-            output_ids = model.generate(**inputs, max_new_tokens=50, do_sample=False)
+            output_ids = model.generate(**inputs, max_new_tokens=256, do_sample=False)
             response = tokenizer.decode(output_ids[0][inputs.input_ids.shape[-1]:], skip_special_tokens=True)
             print(f"\nQ: {prompt}")
             print(f"A: {response.strip()}")

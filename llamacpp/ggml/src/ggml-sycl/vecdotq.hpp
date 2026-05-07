@@ -1412,7 +1412,7 @@ static __dpct_inline__ float vec_dot_iso4_q8_1(const void * __restrict__ vbq, co
     float q_vec[4] = {(float)u8[g*4], (float)u8[g*4+1], (float)u8[g*4+2], (float)u8[g*4+3]};
     float q_rot[4];
     // Use inverse rotation (conjugate)
-    quat_multiply_left(s, -qx, -qy, -qz, q_vec, q_rot);
+    quat_multiply_left(s, qx, qy, qz, q_vec, q_rot);
 
     for (int i = 0; i < 4; ++i) {
         int idx = g*4 + i;
@@ -1451,7 +1451,7 @@ static __dpct_inline__ float vec_dot_rotor4_q8_1(const void * __restrict__ vbq, 
             float q_vec[3] = {(float)u8[g*3], (float)u8[g*3+1], (float)u8[g*3+2]};
             float q_rot[3];
             // Use inverse rotation (reverse rotor)
-            rotor_sandwich_vec(s, -p12, -p13, -p23, q_vec, q_rot);
+            rotor_sandwich_vec(s, p12, p13, p23, q_vec, q_rot);
 
             int ki = (qs4[idx/2] >> (4 * (idx%2))) & 0x0F;
             sum += dq * da * rotor4_normalized_centroids[ki] * q_rot[m];

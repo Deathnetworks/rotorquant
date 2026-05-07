@@ -7,12 +7,16 @@
 - **Benchmarking Operational**: `llama-bench` and `llama-perplexity` are ready for validation.
 
 ## Technical Failure Repository [RESOLVED]
-- **Failure**: Perplexity anomalies (`NaN`) during large-scale inference.
-- **Reason**: Discrepancy between global indexing (`tid / 4`) and block-local indexing used in reference quantization. SYCL kernels were rotating weights differently than the model expected.
-- **Fix**: Replaced all rotation seed calculations with `row_local_block_index * groups_per_block + group_id`. Propagated this through `mmvq.cpp`, `vecdotq.hpp`, `dequantize.hpp`, `cpy.cpp`, and `fattn-common.hpp`.
+- **Failure**: Perplexity anomalies (`NaN` and drift) during RotorQuant XPU inference.
+- **Reason 1**: Indexing misalignment (fixed 2026-05-02).
+- **Reason 2**: Rotation direction inversion in dot product kernels. Activation-side rotation was applying the inverse instead of the forward rotation, while reconstruction correctly used the inverse.
+- **Fix**: Corrected `quat_multiply_left` and `rotor_sandwich_vec` parameters in `vecdotq.hpp` and `fattn-common.hpp` to use forward rotation for activations.
 - **Failure**: LNK2019 Unresolved Externals in `ggml-sycl.dll`. [RESOLVED]
 - **Reason**: Missing FA template instances.
 - **Fix**: Stubbed out `ggml_sycl_flash_attn_ext_*` functions.
+- **Failure**: Benchmarking script violating process management rules. [RESOLVED]
+- **Reason**: Multiple `llama-cli.exe` instances causing contention and PPL drift.
+- **Fix**: Added mandatory `taskkill` and `sleep` to `run_command` in `comprehensive_baseline_xpu_v3.py`.
 
 ## Next Steps
 - [ ] Run `llama-perplexity.exe` with ISO4/ROTOR4 models to confirm bit-exact accuracy and stability.

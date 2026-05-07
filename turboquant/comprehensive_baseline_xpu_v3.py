@@ -26,6 +26,10 @@ PAPERS = {
 }
 
 def run_command(cmd, cwd=None, env_debug=False):
+    # Workflow Rule: Ensure ONLY ONE instance of llama processes is active
+    subprocess.run("taskkill /f /im llama*", shell=True, capture_output=True)
+    time.sleep(0.5)
+    
     batch_file = os.path.join(ROOT, "scratch", "run_bench.bat")
     os.makedirs(os.path.dirname(batch_file), exist_ok=True)
     with open(batch_file, "w") as f:
@@ -51,8 +55,8 @@ def clean_json(s):
 
 def get_vram(k_type, v_type, ctx):
     print(f"  Measuring VRAM for K={k_type}, V={v_type}, Context={ctx}...")
-    # Use -st (single-turn) to ensure exit after one generation
-    cmd = f'"{LLAMA_CLI}" -m "{MODEL}" -ctk {k_type} -ctv {v_type} -p "H" -n 1 -c {ctx} -st --n-gpu-layers 99'
+    # Use --single-turn to ensure exit after one generation
+    cmd = f'"{LLAMA_CLI}" -m "{MODEL}" -ctk {k_type} -ctv {v_type} -p "H" -n 1 -c {ctx} --single-turn --n-gpu-layers 99'
     stdout, stderr = run_command(cmd, env_debug=True)
     combined = stdout + stderr
     
@@ -99,7 +103,7 @@ def get_vram(k_type, v_type, ctx):
 def run_perplexity(k_type, v_type):
     print(f"  Running Perplexity for K={k_type}, V={v_type}...")
     # Using stride 512 as per workflow rules. Limit chunks for speed.
-    cmd = f'"{LLAMA_PERP}" -m "{MODEL}" -f "{DATASET}" -c 2048 -b 512 --ppl-stride 512 --n-chunks 32 --n-gpu-layers 99'
+    cmd = f'"{LLAMA_PERP}" -m "{MODEL}" -f "{DATASET}" -c 2048 -b 512 --ppl-stride 512 --chunks 32 --n-gpu-layers 99'
     stdout, stderr = run_command(cmd)
     combined = stdout + stderr
     
@@ -137,7 +141,7 @@ def run_needle_test(k_type, v_type, ctx=4096):
     with open(prompt_file, "w", encoding="utf-8") as f:
         f.write(prompt)
     
-    cmd = f'"{LLAMA_CLI}" -m "{MODEL}" -ctk {k_type} -ctv {v_type} -f "{prompt_file}" -n 24 -c {ctx + 512} -st --n-gpu-layers 99 --temp 0'
+    cmd = f'"{LLAMA_CLI}" -m "{MODEL}" -ctk {k_type} -ctv {v_type} -f "{prompt_file}" -n 24 -c {ctx + 512} --single-turn --n-gpu-layers 99 --temp 0'
     stdout, stderr = run_command(cmd)
     combined = stdout + stderr
     
@@ -160,7 +164,7 @@ def run_coherency_test(k_type, v_type):
         with open(prompt_file, "w", encoding="utf-8") as f:
             f.write(prompt)
             
-        cmd = f'"{LLAMA_CLI}" -m "{MODEL}" -ctk {k_type} -ctv {v_type} -f "{prompt_file}" -n 16 -st --n-gpu-layers 99 --temp 0'
+        cmd = f'"{LLAMA_CLI}" -m "{MODEL}" -ctk {k_type} -ctv {v_type} -f "{prompt_file}" --single-turn -n 128 --n-gpu-layers 99 --temp 0'
         stdout, stderr = run_command(cmd)
         if a.lower() in (stdout + stderr).lower():
             passed += 1
